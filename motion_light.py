@@ -49,7 +49,6 @@ class MotionDetectLight(hass.Hass):
     def occupancy_detected(self) -> None:
         self.log(f"{self._topic} -> Occupancy detected")
         lights_to_turn_on = self._get_lights_for_current_time()
-        self.log(lights_to_turn_on)
         if lights_to_turn_on:
             for entity in lights_to_turn_on:
                 if self.timer_handlers[entity]:
@@ -72,13 +71,15 @@ class MotionDetectLight(hass.Hass):
         if self.timer_handlers[entity]:
             self.cancel_timer(self.timer_handlers[entity])
         current_state = self.get_state(entity)
-        if current_state == "off" or "unknown":
+        if current_state == "off" or current_state == "unknown":
             self.log(f"{self._topic} -> Turning on: {entity}")
             self.turn_on(entity)
+        elif current_state == "on":
+            return
 
     def turn_light_off(self, kwargs) -> None:
         entity = kwargs["entity"]
-        if "scene" in entity: #check if any light in the list contains scene.
+        if "scene" in entity:
             scene_lights = self._get_lights_for_scene()
             for entity in scene_lights:
                 self.log(f"{self._topic} -> Turning off: {entity}")
