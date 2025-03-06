@@ -1,27 +1,62 @@
 office_motion_light:
   class: MotionDetectLight
   module: motion_light
-  lights:
-    - light.office_desk
+  time_based_lights:
+    day:
+      start: "00:00:00"
+      end: "23:59:59"
+      lights:
+        - light.office_desk
   topic: zigbee2mqtt/office_motion
   delay: 300
 
 printer_motion_light:
   class: MotionDetectLight
   module: motion_light
-  lights:
-    - light.printer_upper
-    - light.printer_lower
+  time_based_lights:
+   day:
+      start: "23:59:59"
+      end: "00:00:00"
+      lights:
+        - light.printer_upper
+        - light.printer_lower
   topic: zigbee2mqtt/printer_motion
   delay: 120
 
 sim_motion_light:
   class: MotionDetectLight
   module: motion_light
-  lights:
-    - switch.sim_desk_light
+  time_based_lights:
+    day:
+      start: "23:59:59"
+      end: "00:00:00"
+      lights:
+        - switch.sim_desk_light
   topic: zigbee2mqtt/sim_motion
   delay: 120
+
+stairway_motion_light:
+  class: MotionDetectLight
+  module: motion_light
+  time_based_lights:
+    night:
+      start: "23:00:01"
+      end: "05:00:00"
+      lights:
+        - scene.upstairs_light_night
+      scene_lights:
+        - light.upstairs_light_1
+        - light.upstairs_light_2
+    day:
+      start: "05:00:01"
+      end: "23:00:00"
+      lights:
+        - scene.upstairs_light_day
+      scene_lights:
+        - light.upstairs_light_1
+        - light.upstairs_light_2
+  topic: zigbee2mqtt/stairway_motion
+  delay: 1
 
 bedroom_button:
   class: ButtonPress
@@ -42,6 +77,6 @@ front_door_lock:
   lock: lock.front_door
   person: binary_sensor.g4_doorbell_person_detected
 
-espresso_off:
+daily_espresso_off:
   class: EspressoSwitchOff
   module: espresso_off

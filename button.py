@@ -8,7 +8,7 @@ _MQTT_PLUGIN_NAMESPACE = "mqtt"
 
 class ButtonPress(hass.Hass):
     """
-    Button Control
+    Bedroom Button Control
     """
 
     def initialize(self) -> None:
