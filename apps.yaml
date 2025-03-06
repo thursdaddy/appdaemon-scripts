@@ -1,0 +1,47 @@
+office_motion_light:
+  class: MotionDetectLight
+  module: motion_light
+  lights:
+    - light.office_desk
+  topic: zigbee2mqtt/office_motion
+  delay: 300
+
+printer_motion_light:
+  class: MotionDetectLight
+  module: motion_light
+  lights:
+    - light.printer_upper
+    - light.printer_lower
+  topic: zigbee2mqtt/printer_motion
+  delay: 120
+
+sim_motion_light:
+  class: MotionDetectLight
+  module: motion_light
+  lights:
+    - switch.sim_desk_light
+  topic: zigbee2mqtt/sim_motion
+  delay: 120
+
+bedroom_button:
+  class: ButtonPress
+  module: button
+  topic: zigbee2mqtt/bedroom_button
+
+back_door_lock:
+  class: LockDoors
+  module: locks
+  topic: zigbee2mqtt/back_door_magnet
+  lock: lock.back_door
+  person: binary_sensor.back_door_person_detected
+
+front_door_lock:
+  class: LockDoors
+  module: locks
+  topic: zigbee2mqtt/front_door_magnet
+  lock: lock.front_door
+  person: binary_sensor.g4_doorbell_person_detected
+
+espresso_off:
+  class: EspressoSwitchOff
+  module: espresso_off
