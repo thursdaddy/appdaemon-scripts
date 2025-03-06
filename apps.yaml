@@ -77,6 +77,10 @@ front_door_lock:
   lock: lock.front_door
   person: binary_sensor.g4_doorbell_person_detected
 
+pantry_door_light:
+  class: PantryLight
+  module: pantry_light
+
 daily_espresso_off:
   class: EspressoSwitchOff
   module: espresso_off
