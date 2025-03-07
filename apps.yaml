@@ -1,6 +1,6 @@
 office_motion_light:
   class: MotionDetectLight
-  module: motion_light
+  module: light_motion
   time_based_lights:
     day:
       start: "00:00:00"
@@ -12,7 +12,7 @@ office_motion_light:
 
 printer_motion_light:
   class: MotionDetectLight
-  module: motion_light
+  module: light_motion
   time_based_lights:
    day:
       start: "23:59:59"
@@ -25,7 +25,7 @@ printer_motion_light:
 
 sim_motion_light:
   class: MotionDetectLight
-  module: motion_light
+  module: light_motion
   time_based_lights:
     day:
       start: "23:59:59"
@@ -35,9 +35,9 @@ sim_motion_light:
   topic: zigbee2mqtt/sim_motion
   delay: 120
 
-stairway_motion_light:
+stairway_light_motion:
   class: MotionDetectLight
-  module: motion_light
+  module: light_motion
   time_based_lights:
     night:
       start: "23:00:01"
@@ -79,8 +79,8 @@ front_door_lock:
 
 pantry_door_light:
   class: PantryLight
-  module: pantry_light
+  module: light_pantry
 
 daily_espresso_off:
   class: EspressoSwitchOff
-  module: espresso_off
+  module: switch_espresso_daily
