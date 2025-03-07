@@ -71,11 +71,9 @@ class MotionDetectLight(hass.Hass):
         if self.timer_handlers[entity]:
             self.cancel_timer(self.timer_handlers[entity])
         current_state = self.get_state(entity)
-        if current_state == "off" or current_state == "unknown":
+        if not current_state == "on":
             self.log(f"{self._topic} -> Turning on: {entity}")
             self.turn_on(entity)
-        elif current_state == "on":
-            return
 
     def turn_light_off(self, kwargs) -> None:
         entity = kwargs["entity"]
