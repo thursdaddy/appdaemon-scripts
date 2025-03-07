@@ -20,7 +20,7 @@ class LockDoors(hass.Hass):
         # Set in apps.yml
         self._topic = self.args["topic"]
         self._person = self.args["person"]
-        self._location_entity = "device_tracker.pixel_7_pro"
+        self._location_entity = "device_tracker.pixel_7_pro_2"
         self._magnet = self._topic.replace("zigbee2mqtt/", "binary_sensor.")
 
         self._lock = self.args["lock"]

@@ -20,6 +20,9 @@ class ButtonPress(hass.Hass):
         self._entities = [
             "light.printer_upper",
             "light.printer_lower",
+            "light.upstairs_light_1",
+            "light.upstairs_light_2",
+            "light.office_desk",
             "switch.living_room_tv_lights",
             "switch.sim_desk_light",
         ]

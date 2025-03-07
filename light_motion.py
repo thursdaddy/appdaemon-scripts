@@ -70,10 +70,13 @@ class MotionDetectLight(hass.Hass):
     def turn_light_on(self, entity: str) -> None:
         if self.timer_handlers[entity]:
             self.cancel_timer(self.timer_handlers[entity])
-        current_state = self.get_state(entity)
-        if not current_state == "on":
-            self.log(f"{self._topic} -> Turning on: {entity}")
-            self.turn_on(entity)
+        if "scene" in entity:
+            scene_lights = self._get_lights_for_scene()
+            for entity in scene_lights:
+                current_state = self.get_state(entity)
+                if not current_state == "on":
+                    self.log(f"{self._topic} -> Turning on: {entity}")
+                    self.turn_on(entity)
 
     def turn_light_off(self, kwargs) -> None:
         entity = kwargs["entity"]
@@ -90,8 +93,12 @@ class MotionDetectLight(hass.Hass):
         for time_range, config in self._time_based_lights.items():
             start_time = datetime.strptime(config["start"], "%H:%M:%S").time()
             end_time = datetime.strptime(config["end"], "%H:%M:%S").time()
-            if start_time <= now <= end_time:
-                return config["lights"]
+            if start_time <= end_time:
+                if start_time <= now <= end_time:
+                    return config["lights"]
+            else:
+                if now >= start_time or now <= end_time:
+                    return config["lights"]
         return None
 
     def _get_lights_for_scene(self) -> Optional[List[str]]:
@@ -99,6 +106,10 @@ class MotionDetectLight(hass.Hass):
         for time_range, config in self._time_based_lights.items():
             start_time = datetime.strptime(config["start"], "%H:%M:%S").time()
             end_time = datetime.strptime(config["end"], "%H:%M:%S").time()
-            if start_time <= now <= end_time:
-                return config["scene_lights"]
+            if start_time <= end_time:
+                if start_time <= now <= end_time:
+                    return config["scene_lights"]
+            else:
+                if now >= start_time or now <= end_time:
+                    return config["scene_lights"]
         return None
