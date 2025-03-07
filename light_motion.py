@@ -1,5 +1,6 @@
 import json
 from datetime import datetime, time
+
 from typing import Dict, List, Optional
 
 import hassapi as hass
@@ -51,32 +52,28 @@ class MotionDetectLight(hass.Hass):
         lights_to_turn_on = self._get_lights_for_current_time()
         if lights_to_turn_on:
             for entity in lights_to_turn_on:
-                if self.timer_handlers[entity]:
+                if self.timer_handlers[entity] is not None:
                     self.cancel_timer(self.timer_handlers[entity])
                     self.timer_handlers[entity] = None
-                self.turn_light_on(entity)
+            self.turn_light_on(entity)
 
     def occupancy_cleared(self) -> None:
         self.log(f"{self._topic} -> Occupancy cleared")
         lights_to_turn_off = self._get_lights_for_current_time()
         if lights_to_turn_off:
             for entity in lights_to_turn_off:
-                if self.timer_handlers[entity]:
+                if self.timer_handlers[entity] is not None:
                     self.cancel_timer(self.timer_handlers[entity])
+                    self.timer_handlers[entity] = None
                 self.timer_handlers[entity] = self.run_in(
                     self.turn_light_off, self._delay, entity=entity
                 )
 
     def turn_light_on(self, entity: str) -> None:
-        if self.timer_handlers[entity]:
+        if self.timer_handlers[entity] is not None:
             self.cancel_timer(self.timer_handlers[entity])
-        if "scene" in entity:
-            scene_lights = self._get_lights_for_scene()
-            for entity in scene_lights:
-                current_state = self.get_state(entity)
-                if not current_state == "on":
-                    self.log(f"{self._topic} -> Turning on: {entity}")
-                    self.turn_on(entity)
+            self.timer_handlers[entity] = None
+        self.turn_on(entity)
 
     def turn_light_off(self, kwargs) -> None:
         entity = kwargs["entity"]

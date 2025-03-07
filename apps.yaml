@@ -44,8 +44,8 @@ sim_motion_light:
   module: light_motion
   time_based_lights:
     day:
-      start: "23:59:59"
-      end: "00:00:00"
+      start: "00:00:00"
+      end: "23:59:59"
       lights:
         - switch.sim_desk_light
   topic: zigbee2mqtt/sim_motion
