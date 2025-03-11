@@ -1,0 +1,93 @@
+office_motion:
+  class: MotionRGBLight
+  module: rgb_lights
+  motion_sensor: zigbee2mqtt/motion_office
+  lights:
+    - light.office_desk
+  schedule:
+    day:
+      start: sunrise
+      end: "18:00:00"
+      brightness: 80
+      color: [255, 247, 255]
+      delay: 300
+    evening:
+      start: "18:00:01"
+      end: "22:00:00"
+      brightness: 100
+      color: [255, 157, 71]
+      delay: 120
+    night:
+      start: "22:00:01"
+      end: "sunrise - 00:00:01"
+      color: [255, 110, 84]
+      brightness: 30
+      delay: 60
+
+stairway_motion:
+  class: MotionRGBLight
+  module: rgb_lights
+  motion_sensor: zigbee2mqtt/motion_stairway
+  lights:
+    - light.upstairs_light_1
+    - light.upstairs_light_2
+  schedule:
+    day:
+      start: sunrise
+      end: "18:00:00"
+      brightness: 80
+      color: [255, 247, 255]
+      delay: 120
+    evening:
+      start: "18:00:01"
+      end: "22:00:00"
+      brightness: 100
+      color: [255, 157, 71]
+      delay: 120
+    night:
+      start: "22:00:01"
+      end: "sunrise - 00:00:01"
+      color: [255, 28, 20]
+      brightness: 20
+      delay: 30
+      lights:
+        - light.upstairs_light_1
+
+printer_motion:
+  class: MotionRGBLight
+  module: rgb_lights
+  motion_sensor: zigbee2mqtt/motion_printer
+  lights:
+    - light.printer_upper
+    - light.printer_lower
+  schedule:
+    day:
+      start: sunrise
+      end: "23:00:00"
+      brightness: 80
+      color: [255, 247, 255]
+      delay: 120
+    night:
+      start: "23:00:01"
+      end: "sunrise - 00:00:01"
+      color: [255, 28, 20]
+      brightness: 20
+      delay: 30
+      lights:
+        - light.printer_lower
+
+sim_motion:
+  class: MotionSwitch
+  module: switches
+  motion_sensor: zigbee2mqtt/motion_sim
+  switches:
+    - switch.sim_desk_light
+  schedule:
+    day:
+      start: sunrise
+      end: "23:00:00"
+      delay: 300
+    night:
+      start: "23:00:01"
+      end: "sunrise - 00:00:01"
+      delay: 30

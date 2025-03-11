@@ -16,7 +16,7 @@ class ButtonPress(hass.Hass):
         Button: Aqara Button
         """
         # Set in apps.yml
-        self._topic = "zigbee2mqtt/bedroom_button"
+        self._topic = "zigbee2mqtt/button_bedroom"
         self._entities = [
             "light.printer_upper",
             "light.printer_lower",

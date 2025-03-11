@@ -25,10 +25,10 @@ class LockDoors(hass.Hass):
 
         self._lock = self.args["lock"]
         if self._lock == "lock.back_door":
-            self._lock_topic = "zigbee2mqtt/back_door_lock/set"
+            self._lock_topic = "zigbee2mqtt/lock_back_door/set"
             self._lock_name = "BACK DOOR"
         elif self._lock == "lock.front_door":
-            self._lock_topic = "zigbee2mqtt/front_door_lock/set"
+            self._lock_topic = "zigbee2mqtt/lock_front_door/set"
             self._lock_name = "FRONT DOOR"
 
         self._mqtt = self.get_plugin_api("MQTT")

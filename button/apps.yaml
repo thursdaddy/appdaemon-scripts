@@ -1,0 +1,4 @@
+bedroom_button:
+  class: ButtonPress
+  module: bedroom
+  topic: zigbee2mqtt/button_bedroom

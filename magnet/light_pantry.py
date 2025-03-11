@@ -18,7 +18,7 @@ class PantryLight(hass.Hass):
         """
         self.timer_handler = None
 
-        self._topic = "zigbee2mqtt/pantry_door_magnet"
+        self._topic = "zigbee2mqtt/magnet_pantry_door"
         self._entity = "light.pantry_leds"
 
         self._mqtt = self.get_plugin_api("MQTT")

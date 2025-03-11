@@ -23,29 +23,31 @@ class TvLights(hass.Hass):
     def tv_consumption_changed(self, entity, attribute, old, new, kwargs):
         try:
             consumption = float(new)
+            if consumption == "unavailable":
+                return
+            if consumption > self.consumption_threshold_on:
+                if self.timer_handle_on is None:
+                    if self.timer_handle_off:
+                        self.cancel_timer(self.timer_handle_off)
+                        self.timer_handle_off = None
+
+                    if self.get_state(self.tv_lights_entity) == "off":
+                        self.timer_handle_on = self.run_in(
+                            self.turn_on_lights, self.delay_on
+                        )
+
+            elif consumption < self.consumption_threshold_off:
+                if self.timer_handle_on:
+                    self.cancel_timer(self.timer_handle_on)
+
+                if self.timer_handle_off is None:
+                    self.timer_handle_off = self.run_in(
+                        self.turn_off_lights, self.delay_off
+                    )
+
         except (ValueError, TypeError):
             self.log(f"Invalid consumption value: {new}")
             return
-
-        if consumption > self.consumption_threshold_on:
-            if self.timer_handle_on is None:
-                if self.timer_handle_off:
-                    self.cancel_timer(self.timer_handle_off)
-                    self.timer_handle_off = None
-
-                if self.get_state(self.tv_lights_entity) == "off":
-                    self.timer_handle_on = self.run_in(
-                        self.turn_on_lights, self.delay_on
-                    )
-
-        elif consumption < self.consumption_threshold_off:
-            if self.timer_handle_on:
-                self.cancel_timer(self.timer_handle_on)
-                self.timer_handle_on = None
-            if self.timer_handle_off is None:
-                self.timer_handle_off = self.run_in(
-                    self.turn_off_lights, self.delay_off
-                )
 
     def turn_on_lights(self, kwargs):
         if not self.lights_on:

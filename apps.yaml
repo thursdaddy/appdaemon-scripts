@@ -1,113 +1,16 @@
-office_motion_light:
-  class: MotionDetectLight
-  module: light_motion
-  time_based_lights:
-    day:
-      start: "05:00:01"
-      end: "17:00:00"
-      lights:
-        - scene.office_lamp_day
-      scene_lights:
-        - light.office_desk
-    evening:
-      start: "17:00:01"
-      end: "21:00:00"
-      lights:
-        - scene.office_lamp_evening
-      scene_lights:
-        - light.office_desk
-    night:
-      start: "21:00:01"
-      end: "05:00:00"
-      lights:
-        - scene.office_lamp_night
-      scene_lights:
-        - light.office_desk
-  topic: zigbee2mqtt/office_motion
-  delay: 300
-
-printer_motion_light:
-  class: MotionDetectLight
-  module: light_motion
-  time_based_lights:
-   day:
-      start: "00:00:00"
-      end: "23:59:59"
-      lights:
-        - light.printer_upper
-        - light.printer_lower
-  topic: zigbee2mqtt/printer_motion
-  delay: 120
-
-sim_motion_light:
-  class: MotionDetectLight
-  module: light_motion
-  time_based_lights:
-    day:
-      start: "00:00:00"
-      end: "23:59:59"
-      lights:
-        - switch.sim_desk_light
-  topic: zigbee2mqtt/sim_motion
-  delay: 120
-
-stairway_light_motion:
-  class: MotionDetectLight
-  module: light_motion
-  time_based_lights:
-    day:
-      start: "05:00:01"
-      end: "17:59:59"
-      lights:
-        - scene.upstairs_light_day
-      scene_lights:
-        - light.upstairs_light_1
-        - light.upstairs_light_2
-    evening:
-      start: "18:00:00"
-      end: "23:00:00"
-      lights:
-        - scene.upstairs_light_evening
-      scene_lights:
-        - light.upstairs_light_1
-        - light.upstairs_light_2
-    night:
-      start: "23:00:01"
-      end: "05:00:00"
-      lights:
-        - scene.upstairs_light_night
-      scene_lights:
-        - light.upstairs_light_1
-        - light.upstairs_light_2
-  topic: zigbee2mqtt/stairway_motion
-  delay: 60
-
-bedroom_button:
-  class: ButtonPress
-  module: button
-  topic: zigbee2mqtt/bedroom_button
-
 back_door_lock:
   class: LockDoors
   module: locks
-  topic: zigbee2mqtt/back_door_magnet
+  topic: zigbee2mqtt/magnet_back_door
   lock: lock.back_door
   person: binary_sensor.back_door_person_detected
 
 front_door_lock:
   class: LockDoors
   module: locks
-  topic: zigbee2mqtt/front_door_magnet
+  topic: zigbee2mqtt/magnet_front_door
   lock: lock.front_door
   person: binary_sensor.g4_doorbell_person_detected
-
-pantry_door_light:
-  class: PantryLight
-  module: light_pantry
-
-daily_espresso_off:
-  class: EspressoSwitchOff
-  module: switch_espresso_daily
 
 switch_tv_lights:
   class: TvLights

@@ -1,0 +1,3 @@
+pantry_door_light:
+  class: PantryLight
+  module: light_pantry
