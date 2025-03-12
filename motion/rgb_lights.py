@@ -20,7 +20,10 @@ class MotionRGBLight(hass.Hass):
         self.timer_handler = None
 
         if not self._motion_sensor:
-            self.log(f"[ERR] Set a light or scene to use with {self._motion_sensor}")
+            self.log(
+                f"[ERR] Set a light or scene to use \
+                    with {self._motion_sensor}"
+            )
             return
 
         self.mqtt_api.listen_event(
@@ -71,7 +74,8 @@ class MotionRGBLight(hass.Hass):
                 config["lights"] = self._lights
         return config
 
-    # represent brightness value as percentage between 1-100, translate to values 3-255
+    # represent brightness value as
+    # percentage between 1-100, translate to values 3-255
     def convert_brightness_value(self, value):
         value = (value - 1) / 99
         value_adjusted = int(round(value * (255 - 3) + 3))

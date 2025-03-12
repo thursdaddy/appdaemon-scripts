@@ -18,7 +18,10 @@ class MotionSwitch(hass.Hass):
         self.timer_handler = None
 
         if not self._motion_sensor:
-            self.log(f"[ERR] Set a switch or scene to use with {self._motion_sensor}")
+            self.log(
+                f"[ERR] Set a switch or scene to use with \
+                    {self._motion_sensor}"
+            )
             return
 
         self.mqtt_api.listen_event(
@@ -43,7 +46,7 @@ class MotionSwitch(hass.Hass):
                 if config["delay"] is not None:
                     self.timer_handler = self.run_in(
                         self.turn_off_switches(config, kwargs),
-                        self._config["delay"],
+                        config["delay"],
                     )
 
         except json.JSONDecodeError:
