@@ -21,8 +21,8 @@ class MotionRGBLight(hass.Hass):
 
         if not self._motion_sensor:
             self.log(
-                f"[ERR] Set a light or scene to use \
-                    with {self._motion_sensor}"
+                f"[ERR] Set a light or scene to use with \
+                        {self._motion_sensor}"
             )
             return
 
@@ -33,7 +33,7 @@ class MotionRGBLight(hass.Hass):
     def mqtt_callback(self, event_name, data, kwargs):
         try:
             payload = json.loads(data["payload"])
-            config = self.get_config()
+            self.config = self.get_config()
             if "occupancy" in payload and payload["occupancy"] is True:
                 self.log("Motion Detected!")
 
@@ -41,12 +41,13 @@ class MotionRGBLight(hass.Hass):
                     self.cancel_timer(self.timer_handler)
 
                 if self.is_scheduled:
-                    self.turn_on_lights(config)
+                    self.turn_on_lights()
 
             elif "occupancy" in payload and payload["occupancy"] is False:
                 self.log("Motion Cleared!")
                 self.timer_handler = self.run_in(
-                    self.turn_off_lights(config, kwargs), config["delay"]
+                    self.turn_off_lights,
+                    self.config["delay"]
                 )
 
         except json.JSONDecodeError:
@@ -54,8 +55,8 @@ class MotionRGBLight(hass.Hass):
         except KeyError:
             self.log("[ERR] Missing occupancy key in payload")
 
-    def is_scheduled(self, config):
-        if self.now_is_between(config["start"], config["end"]):
+    def is_scheduled(self):
+        if self.now_is_between(self.config["start"], self.config["end"]):
             return True
 
     def get_config(self):
@@ -81,33 +82,38 @@ class MotionRGBLight(hass.Hass):
         value_adjusted = int(round(value * (255 - 3) + 3))
         return value_adjusted
 
-    def turn_on_lights(self, config):
-        for light in config["lights"]:
-            # get current state of lights
-            state_all = self.get_entity(light).get_state(attribute="all")
-            state_brightness = state_all["attributes"]["brightness"]
-            state_color = state_all["attributes"]["rgb_color"]
+    def state_and_config_match(self, state_all, light):
+        state_all = self.get_entity(light).get_state(attribute="all")
+        brightness = state_all["attributes"]["brightness"]
+        color = state_all["attributes"]["rgb_color"]
+        if self.config["color"] == color:
+            if self.config["brightness_adjusted"] == brightness:
+                return True
+            else:
+                return False
+        else:
+            return False
 
+    def turn_on_lights(self):
+        for light in self.config["lights"]:
+            state_all = self.get_entity(light).get_state(attribute="all")
             # set color via wheel in has ui to get rgb values
             # self.log(f"STATE: {state_brightness} - {state_color}")
             # config_brightness = config["brightness_adjusted"]
             # config_color = config["color"]
             # self.log(f"CONFIG: {config_brightness} : {config_color}")
 
-            if (
-                state_all["state"] == "off"
-                or not config["color"] == state_color
-                or not config["brightness_adjusted"] == state_brightness
-            ):
+            matching = self.state_and_config_match(state_all, light)
+            if state_all["state"] == "off" or not matching:
                 self.log(f"Turning on light: {light}")
                 self.call_service(
                     "light/turn_on",
                     entity_id=light,
-                    brightness=config["brightness_adjusted"],
-                    rgb_color=config["color"],
+                    brightness=self.config["brightness_adjusted"],
+                    rgb_color=self.config["color"],
                 )
 
-    def turn_off_lights(self, config, kwargs):
-        for light in config["lights"]:
+    def turn_off_lights(self, kwargs):
+        for light in self.config["lights"]:
             self.log(f"Turning off light: {light}")
             self.turn_off(light)
