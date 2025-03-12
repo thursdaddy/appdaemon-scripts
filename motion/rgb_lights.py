@@ -46,8 +46,7 @@ class MotionRGBLight(hass.Hass):
             elif "occupancy" in payload and payload["occupancy"] is False:
                 self.log("Motion Cleared!")
                 self.timer_handler = self.run_in(
-                    self.turn_off_lights,
-                    self.config["delay"]
+                    self.turn_off_lights, self.config["delay"]
                 )
 
         except json.JSONDecodeError:
@@ -83,7 +82,6 @@ class MotionRGBLight(hass.Hass):
         return value_adjusted
 
     def state_and_config_match(self, state_all, light):
-        state_all = self.get_entity(light).get_state(attribute="all")
         brightness = state_all["attributes"]["brightness"]
         color = state_all["attributes"]["rgb_color"]
         if self.config["color"] == color:
