@@ -1,0 +1,11 @@
+front_door_unlock:
+  class: UnlockDoor
+  module: locks
+  tag: tag.front_door_unlock
+  lock: lock_front_door
+
+back_door_unlock:
+  class: UnlockDoor
+  module: locks
+  tag: tag.back_door_unlock
+  lock: lock_back_door

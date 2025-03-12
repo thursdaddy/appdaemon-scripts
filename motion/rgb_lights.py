@@ -48,6 +48,29 @@ class MotionRGBLight(hass.Hass):
         except KeyError:
             self.log("[ERR] Missing occupancy key in payload")
 
+    def get_config(self):
+        for name, config in self._schedule.items():
+            config["name"] = name
+            start = config["start"]
+            end = config["end"]
+            if self.now_is_between(start, end):
+                if "brightness" not in config:
+                    config["brightness"] = self._brightness
+                config["brightness_adjusted"] = self.convert_brightness_value(value=config["brightness"])
+                if "color" not in config:
+                    config["color"] = self._color
+                if "delay" not in config:
+                    config["delay"] = self._delay
+                if "lights" not in config:
+                    config["lights"] = self._lights
+                return config
+
+    # represent brightness value as percentage between 1-100, translate to values 3-255
+    def convert_brightness_value(self, value):
+        value = (value - 1) / 99
+        value_adjusted = int(round(value * (255 - 3) + 3))
+        return value_adjusted
+
     def turn_on_lights(self, config):
         for light in config["lights"]:
             # get current state of lights
@@ -78,22 +101,3 @@ class MotionRGBLight(hass.Hass):
         for light in self._config["lights"]:
             self.log(f"Turning off light: {light}")
             self.turn_off(light)
-
-    def get_config(self):
-        for name, config in self._schedule.items():
-            config["name"] = name
-            start = config["start"]
-            end = config["end"]
-            if self.now_is_between(start, end):
-                if "brightness" not in config:
-                    config["brightness"] = self._brightness
-                config["brightness_adjusted"] = int((config["brightness"] / 100) * 254 + 3) # lol
-                if config["brightness"] == 100:
-                    config["brightness_adjusted"] = int(config["brightness_adjusted"] - 2)
-                if "color" not in config:
-                    config["color"] = self._color
-                if "delay" not in config:
-                    config["delay"] = self._delay
-                if "lights" not in config:
-                    config["lights"] = self._lights
-                return config

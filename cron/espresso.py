@@ -1,7 +1,6 @@
 import appdaemon.plugins.hass.hassapi as hass
 
 
-# TODO make this modular
 class SwitchControl(hass.Hass):
 
     def initialize(self):

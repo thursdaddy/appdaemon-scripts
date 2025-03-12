@@ -53,7 +53,7 @@ class MotionSwitch(hass.Hass):
             # get current state of switches
             state = self.get_entity(switch).get_state()
 
-            if state["state"] == "off":
+            if state == "off":
                 self.log(f"Turning on switch: {switch}")
                 self.call_service(
                     "switch/turn_on",

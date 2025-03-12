@@ -8,14 +8,14 @@ office_motion:
     day:
       start: sunrise
       end: "18:00:00"
-      brightness: 80
       color: [255, 247, 255]
+      brightness: 80
       delay: 300
     evening:
       start: "18:00:01"
       end: "22:00:00"
-      brightness: 100
       color: [255, 157, 71]
+      brightness: 100
       delay: 120
     night:
       start: "22:00:01"
@@ -41,14 +41,14 @@ stairway_motion:
     evening:
       start: "18:00:01"
       end: "22:00:00"
-      brightness: 100
       color: [255, 157, 71]
+      brightness: 100
       delay: 120
     night:
       start: "22:00:01"
       end: "sunrise - 00:00:01"
       color: [255, 28, 20]
-      brightness: 20
+      brightness: 5
       delay: 30
       lights:
         - light.upstairs_light_1
@@ -64,8 +64,8 @@ printer_motion:
     day:
       start: sunrise
       end: "23:00:00"
-      brightness: 80
       color: [255, 247, 255]
+      brightness: 80
       delay: 120
     night:
       start: "23:00:01"

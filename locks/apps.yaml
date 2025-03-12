@@ -1,0 +1,23 @@
+back_door_camera:
+  class: CameraLockControl
+  module: location
+  lock: lock_back_door
+  camera: binary_sensor.back_door_person_detected
+
+front_door_camera:
+  class: CameraLockControl
+  module: location
+  lock: lock_front_door
+  camera: binary_sensor.g4_doorbell_person_detected
+
+front_door_lock:
+  class: LockDoors
+  module: locks
+  magnet: magnet_front_door
+  lock: lock_front_door
+
+back_door_lock:
+  class: LockDoors
+  module: locks
+  magnet: magnet_back_door
+  lock: lock_back_door
