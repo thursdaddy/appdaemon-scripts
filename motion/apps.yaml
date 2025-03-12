@@ -21,7 +21,7 @@ office_motion:
       start: "22:00:01"
       end: "sunrise - 00:00:01"
       color: [255, 110, 84]
-      brightness: 30
+      brightness: 60
       delay: 60
 
 stairway_motion:
@@ -76,7 +76,7 @@ printer_motion:
       lights:
         - light.printer_lower
 
-sim_motion:
+sim_motion_light:
   class: MotionSwitch
   module: switches
   motion_sensor: zigbee2mqtt/motion_sim
@@ -91,3 +91,14 @@ sim_motion:
       start: "23:00:01"
       end: "sunrise - 00:00:01"
       delay: 30
+
+sim_motion_espresso:
+  class: MotionSwitch
+  module: switches
+  motion_sensor: zigbee2mqtt/motion_sim
+  switches:
+    - switch.kitchen_espresso
+  schedule:
+    day:
+      start: sunrise
+      end: "11:00:00"

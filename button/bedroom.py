@@ -1,9 +1,6 @@
 import json
-from typing import Dict
 
 import hassapi as hass
-
-_MQTT_PLUGIN_NAMESPACE = "mqtt"
 
 
 class ButtonPress(hass.Hass):
@@ -11,7 +8,7 @@ class ButtonPress(hass.Hass):
     Bedroom Button Control
     """
 
-    def initialize(self) -> None:
+    def initialize(self):
         """
         Button: Aqara Button
         """
@@ -34,7 +31,7 @@ class ButtonPress(hass.Hass):
             topic=self._topic,
         )
 
-    def _parse_json(self, event: str, data: Dict, unused_kwargs: Dict) -> None:
+    def _parse_json(self, event_name, data, kwargs):
         try:
             payload = json.loads(data["payload"])
             if payload["action"] == "single":
@@ -44,11 +41,11 @@ class ButtonPress(hass.Hass):
         except json.JSONDecodeError:
             return
 
-    def press_single(self) -> None:
+    def press_single(self):
         self.log(f"{self._topic} -> Turn off All Lights")
         for entity in self._entities:
             self.turn_off(entity)
 
-    def press_double(self) -> None:
+    def press_double(self):
         self.log(f"{self._topic} -> Turn on Espresso")
         self.turn_on("switch.kitchen_espresso")

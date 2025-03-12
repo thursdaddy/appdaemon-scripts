@@ -13,7 +13,7 @@ class MotionSwitch(hass.Hass):
         self._motion_sensor = self.args.get("motion_sensor")
         self._switches = self.args.get("switches", None)
         self._schedule = self.args.get("schedule", None)
-        self._delay = self.args.get("delay", 30)
+        self._delay = self.args.get("delay", None)
 
         self.timer_handler = None
 
@@ -28,20 +28,23 @@ class MotionSwitch(hass.Hass):
     def mqtt_callback(self, event_name, data, kwargs):
         try:
             payload = json.loads(data["payload"])
-            self._config = self.get_config()
+            config = self.get_config()
             if "occupancy" in payload and payload["occupancy"] is True:
                 self.log("Motion Detected!")
 
                 if self.info_timer(self.timer_handler) is not None:
                     self.cancel_timer(self.timer_handler)
 
-                self.turn_on_switches(self._config)
+                if self.is_scheduled(config):
+                    self.turn_on_switches(config)
 
             elif "occupancy" in payload and payload["occupancy"] is False:
                 self.log("Motion Cleared!")
-                self.timer_handler = self.run_in(
-                    self.turn_off_switches, self._config["delay"]
-                )
+                if config["delay"] is not None:
+                    self.timer_handler = self.run_in(
+                        self.turn_off_switches(config, kwargs),
+                        self._config["delay"],
+                    )
 
         except json.JSONDecodeError:
             self.log("[ERR] Invalid JSON payload")
@@ -60,19 +63,20 @@ class MotionSwitch(hass.Hass):
                     entity_id=switch,
                 )
 
-    def turn_off_switches(self, kwargs):
-        for switch in self._config["switches"]:
+    def turn_off_switches(self, config, kwargs):
+        for switch in config["switches"]:
             self.log(f"Turning off switch: {switch}")
             self.turn_off(switch)
+
+    def is_scheduled(self, config):
+        if self.now_is_between(config["start"], config["end"]):
+            return True
 
     def get_config(self):
         for name, config in self._schedule.items():
             config["name"] = name
-            start = config["start"]
-            end = config["end"]
-            if self.now_is_between(start, end):
-                if "delay" not in config:
-                    config["delay"] = self._delay
-                if "switches" not in config:
-                    config["switches"] = self._switches
-                return config
+            if "delay" not in config:
+                config["delay"] = self._delay
+            if "switches" not in config:
+                config["switches"] = self._switches
+            return config

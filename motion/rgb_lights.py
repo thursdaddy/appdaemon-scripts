@@ -1,5 +1,7 @@
-import appdaemon.plugins.hass.hassapi as hass
 import json
+
+import appdaemon.plugins.hass.hassapi as hass
+
 
 class MotionRGBLight(hass.Hass):
 
@@ -28,19 +30,20 @@ class MotionRGBLight(hass.Hass):
     def mqtt_callback(self, event_name, data, kwargs):
         try:
             payload = json.loads(data["payload"])
-            self._config = self.get_config()
+            config = self.get_config()
             if "occupancy" in payload and payload["occupancy"] is True:
                 self.log("Motion Detected!")
 
                 if self.info_timer(self.timer_handler) is not None:
                     self.cancel_timer(self.timer_handler)
 
-                self.turn_on_lights(self._config)
+                if self.is_scheduled:
+                    self.turn_on_lights(config)
 
             elif "occupancy" in payload and payload["occupancy"] is False:
                 self.log("Motion Cleared!")
                 self.timer_handler = self.run_in(
-                    self.turn_off_lights, self._config["delay"]
+                    self.turn_off_lights(config, kwargs), config["delay"]
                 )
 
         except json.JSONDecodeError:
@@ -48,22 +51,25 @@ class MotionRGBLight(hass.Hass):
         except KeyError:
             self.log("[ERR] Missing occupancy key in payload")
 
+    def is_scheduled(self, config):
+        if self.now_is_between(config["start"], config["end"]):
+            return True
+
     def get_config(self):
         for name, config in self._schedule.items():
             config["name"] = name
-            start = config["start"]
-            end = config["end"]
-            if self.now_is_between(start, end):
-                if "brightness" not in config:
-                    config["brightness"] = self._brightness
-                config["brightness_adjusted"] = self.convert_brightness_value(value=config["brightness"])
-                if "color" not in config:
-                    config["color"] = self._color
-                if "delay" not in config:
-                    config["delay"] = self._delay
-                if "lights" not in config:
-                    config["lights"] = self._lights
-                return config
+            if "brightness" not in config:
+                config["brightness"] = self._brightness
+            config["brightness_adjusted"] = self.convert_brightness_value(
+                value=config["brightness"]
+            )
+            if "color" not in config:
+                config["color"] = self._color
+            if "delay" not in config:
+                config["delay"] = self._delay
+            if "lights" not in config:
+                config["lights"] = self._lights
+        return config
 
     # represent brightness value as percentage between 1-100, translate to values 3-255
     def convert_brightness_value(self, value):
@@ -97,7 +103,7 @@ class MotionRGBLight(hass.Hass):
                     rgb_color=config["color"],
                 )
 
-    def turn_off_lights(self, kwargs):
-        for light in self._config["lights"]:
+    def turn_off_lights(self, config, kwargs):
+        for light in config["lights"]:
             self.log(f"Turning off light: {light}")
             self.turn_off(light)
