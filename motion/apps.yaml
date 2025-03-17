@@ -1,6 +1,6 @@
 kitchen_motion:
-  class: MotionLight
-  module: lights
+  class: MotionLights
+  module: lutron
   motion_sensor: zigbee2mqtt/motion_kitchen
   lights:
     - light.kitchen_under_cabinet
@@ -25,8 +25,8 @@ kitchen_motion:
         - light.kitchen_under_cabinet
 
 kitchen_alt_motion:
-  class: MotionLight
-  module: lights
+  class: MotionLights
+  module: lutron
   motion_sensor: zigbee2mqtt/motion_kitchen
   lights:
     - light.bar_main_lights

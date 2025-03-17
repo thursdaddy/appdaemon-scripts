@@ -2,6 +2,7 @@ import json
 
 import hassapi as hass
 
+
 class UnlockDoor(hass.Hass):
     """
     Tags to unlock doors

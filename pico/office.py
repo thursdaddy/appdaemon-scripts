@@ -1,7 +1,7 @@
 import hassapi as hass
 
 
-class PicoPress(hass.Hass):
+class PicoEvent(hass.Hass):
     """
     Lutron Pico Remote Controls
     """

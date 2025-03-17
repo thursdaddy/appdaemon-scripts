@@ -3,7 +3,11 @@ import json
 import appdaemon.plugins.hass.hassapi as hass
 
 
-class MotionLight(hass.Hass):
+class MotionLights(hass.Hass):
+    """
+    Lutron
+
+    """
 
     def initialize(self):
         self.hass_api = self.get_plugin_api("HASS")

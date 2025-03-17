@@ -1,3 +1,7 @@
 daily_espresso_off:
   class: SwitchControl
   module: espresso
+
+daily_motion_on:
+  class: SwitchControl
+  module: motion
