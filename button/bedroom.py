@@ -14,24 +14,15 @@ class ButtonPress(hass.Hass):
         """
         # Set in apps.yml
         self._topic = "zigbee2mqtt/button_bedroom"
-        self._entities = [
-            "light.printer_upper",
-            "light.printer_lower",
-            "light.upstairs_light_1",
-            "light.upstairs_light_2",
-            "light.office_desk",
-            "switch.living_room_tv_lights",
-            "switch.sim_desk_light",
-        ]
 
         self._mqtt = self.get_plugin_api("MQTT")
         self._mqtt.listen_event(
-            self._parse_json,
+            self.callback,
             "MQTT_MESSAGE",
             topic=self._topic,
         )
 
-    def _parse_json(self, event_name, data, kwargs):
+    def callback(self, event_name, data, kwargs):
         try:
             payload = json.loads(data["payload"])
             if payload["action"] == "single":
@@ -44,7 +35,7 @@ class ButtonPress(hass.Hass):
     def press_single(self):
         self.log(f"{self._topic} -> Turn off All Lights")
         for entity in self._entities:
-            self.turn_off(entity)
+            self.turn_off("input_boolean.lights_all")
 
     def press_double(self):
         self.log(f"{self._topic} -> Turn on Espresso")

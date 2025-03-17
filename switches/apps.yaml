@@ -1,0 +1,30 @@
+motion_all:
+  class: BooleanControlMotion
+  module: boolean
+  boolean: input_boolean.motion_all
+  entities:
+    - input_boolean.motion_office
+    - input_boolean.motion_kitchen
+    - input_boolean.motion_stairway
+    - input_boolean.motion_sim
+
+lights_off:
+  class: BooleanControlLights
+  module: boolean
+  boolean: input_boolean.lights_all
+  entities:
+    - light.printer_upper
+    - light.printer_lower
+    - light.upstairs_light_1
+    - light.upstairs_light_2
+    - light.office_desk
+    - light.living_room_main_lights
+    - light.dining_room_table_lights
+    - light.hallway_main_lights
+    - light.office_main_lights
+    - light.bar_main_lights
+    - light.kitchen_main_lights
+    - light.kitchen_under_cabinet
+    - light.kitchen_above_cabinet
+    - switch.living_room_tv_lights
+    - switch.sim_desk_light

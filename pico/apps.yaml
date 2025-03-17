@@ -1,0 +1,13 @@
+office_pico:
+  class: PicoOffice
+  module: lights
+  pico: button.pico_office
+  entities:
+    - light.office_desk
+
+living_room_pico:
+  class: PicoLivingRoom
+  module: lights
+  pico: button.pico_living_room
+  entities:
+    - light.living_room_main_lights

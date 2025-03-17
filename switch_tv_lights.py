@@ -22,9 +22,9 @@ class TvLights(hass.Hass):
 
     def tv_consumption_changed(self, entity, attribute, old, new, kwargs):
         try:
-            consumption = float(new)
-            if consumption == "unavailable":
+            if new == "unavailable":
                 return
+            consumption = float(new)
             if consumption > self.consumption_threshold_on:
                 if self.timer_handle_on is None:
                     if self.timer_handle_off:

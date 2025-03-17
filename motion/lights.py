@@ -3,7 +3,7 @@ import json
 import appdaemon.plugins.hass.hassapi as hass
 
 
-class MotionRGBLight(hass.Hass):
+class MotionLight(hass.Hass):
 
     def initialize(self):
         self.hass_api = self.get_plugin_api("HASS")
@@ -13,10 +13,8 @@ class MotionRGBLight(hass.Hass):
         self._motion_sensor = self.args.get("motion_sensor")
         self._lights = self.args.get("lights", None)
         self._schedule = self.args.get("schedule", None)
-        self._color = self.args.get("color", [0, 255, 0])
-        self._delay = self.args.get("delay", 30)
         self._brightness = self.args.get("brightness", 75)
-        self._motion_control = self._motion_sensor.replace(
+        self.motion_control = self._motion_sensor.replace(
             "zigbee2mqtt/", "input_boolean."
         )
 
@@ -34,7 +32,7 @@ class MotionRGBLight(hass.Hass):
         )
 
     def mqtt_callback(self, event_name, data, kwargs):
-        motion_control = self.get_state(self._motion_control)
+        motion_control = self.get_state(self.motion_control)
         if motion_control == "off":
             self.log("Motion Disabled, bye.")
             return
@@ -68,8 +66,6 @@ class MotionRGBLight(hass.Hass):
             config["brightness_adjusted"] = self.convert_brightness_value(
                 value=config["brightness"]
             )
-            if "color" not in config:
-                config["color"] = self._color
             if "delay" not in config:
                 config["delay"] = self._delay
             if "lights" not in config:
@@ -86,19 +82,13 @@ class MotionRGBLight(hass.Hass):
 
     def state_and_config_values(self, state_all, light):
         brightness = state_all["attributes"]["brightness"]
-        color = state_all["attributes"]["rgb_color"]
-        # self.log(f"STATE: {brightness} - {color}")
         # config_brightness = self.config["brightness_adjusted"]
-        # config_color = self.config["color"]
-        # self.log(f"CONFIG: {config_brightness} : {config_color}")
-        if self.config["color"] == color:
-            if self.config["brightness_adjusted"] == brightness:
-                return True
+        if self.config["brightness_adjusted"] == brightness:
+            return True
 
     def turn_on_lights(self):
         for light in self.config["lights"]:
             state_all = self.get_entity(light).get_state(attribute="all")
-            # set color via wheel in has ui to get rgb values
 
             matching = self.state_and_config_values(state_all, light)
             if state_all["state"] == "off" or not matching:
@@ -107,7 +97,6 @@ class MotionRGBLight(hass.Hass):
                     "light/turn_on",
                     entity_id=light,
                     brightness=self.config["brightness_adjusted"],
-                    rgb_color=self.config["color"],
                 )
 
     def turn_off_lights(self, kwargs):

@@ -31,22 +31,24 @@ class MotionSwitch(hass.Hass):
     def mqtt_callback(self, event_name, data, kwargs):
         try:
             payload = json.loads(data["payload"])
-            config = self.get_config()
+            self.config = self.get_config()
             if "occupancy" in payload and payload["occupancy"] is True:
                 self.log("Motion Detected!")
 
                 if self.info_timer(self.timer_handler) is not None:
                     self.cancel_timer(self.timer_handler)
 
-                if self.is_scheduled(config):
-                    self.turn_on_switches(config)
+                if self.is_scheduled():
+                    self.turn_on_switches()
+                else:
+                    self.log("Not Scheduled")
 
             elif "occupancy" in payload and payload["occupancy"] is False:
                 self.log("Motion Cleared!")
-                if config["delay"] is not None:
+                if self.config["delay"] is not None:
                     self.timer_handler = self.run_in(
-                        self.turn_off_switches(config, kwargs),
-                        config["delay"],
+                        self.turn_off_switches,
+                        self.config["delay"],
                     )
 
         except json.JSONDecodeError:
@@ -54,8 +56,8 @@ class MotionSwitch(hass.Hass):
         except KeyError:
             self.log("[ERR] Missing occupancy key in payload")
 
-    def turn_on_switches(self, config):
-        for switch in config["switches"]:
+    def turn_on_switches(self):
+        for switch in self.config["switches"]:
             # get current state of switches
             state = self.get_entity(switch).get_state()
 
@@ -66,13 +68,13 @@ class MotionSwitch(hass.Hass):
                     entity_id=switch,
                 )
 
-    def turn_off_switches(self, config, kwargs):
-        for switch in config["switches"]:
+    def turn_off_switches(self, kwargs):
+        for switch in self.config["switches"]:
             self.log(f"Turning off switch: {switch}")
             self.turn_off(switch)
 
-    def is_scheduled(self, config):
-        if self.now_is_between(config["start"], config["end"]):
+    def is_scheduled(self):
+        if self.now_is_between(self.config["start"], self.config["end"]):
             return True
 
     def get_config(self):
