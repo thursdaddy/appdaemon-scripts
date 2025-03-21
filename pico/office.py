@@ -28,26 +28,23 @@ class PicoEvent(hass.Hass):
         elif data["button_type"] == "off" and data["action"] == "press":
             self.off_pressed(data, kwargs)
         elif data["button_type"] == "stop" and data["action"] == "press":
-            self.on_pressed(data, kwargs)
+            self.stop_pressed(data, kwargs)
 
     def on_pressed(self, data, kwargs):
-        self.log(self._entities)
-        self.toggle(self._motion_sensor)
+        self.log("turn on")
         for entity in self._entities:
-            state = self.get_state(entity)
-        self.log(state)
+            self.turn_on(entity)
 
     def off_pressed(self, data, kwargs):
+        self.log("turn off")
         for entity in self._entities:
             self.turn_off(entity)
 
     def stop_pressed(self, data, kwargs):
-        self.log("stop")
-        self.log(self._entities)
-        self.set_state(self._motion_sensor, state="on")
-        for entity in self._entities:
-            state = self.get_state(entity)
-        self.log(state)
+        self.log("toggle")
+        self.toggle(self._motion_sensor)
+        state = self.get_state(self._motion_sensor)
+        self.log(f"Office Motion Sensor is {state}")
 
     def blink_twice(self, data, kwargs):
         self.log("blinking")

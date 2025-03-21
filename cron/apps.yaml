@@ -4,4 +4,4 @@ daily_espresso_off:
 
 daily_motion_on:
   class: SwitchControl
-  module: motion
+  module: enable_motion

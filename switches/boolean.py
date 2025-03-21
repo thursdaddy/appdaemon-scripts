@@ -36,13 +36,13 @@ class BooleanControlMotion(hass.Hass):
             self.turn_off_motion_automations()
 
     def turn_on_motion_automations(self):
-        self.log("running on")
-        for switch in self._motion_control_booleans:
+        self.log("turning motion on")
+        for switch in self._entities:
             self.log(f"Turning on {switch}".replace("input_boolean.", ""))
             self.turn_on(switch)
 
     def turn_off_motion_automations(self):
-        self.log("running off")
-        for switch in self._motion_control_booleans:
+        self.log("turning motion off")
+        for switch in self._entities:
             self.log(f"Turning off {switch}".replace("input_boolean.", ""))
             self.turn_off(switch)

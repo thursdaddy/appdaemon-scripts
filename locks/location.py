@@ -43,17 +43,15 @@ class CameraLockControl(hass.Hass):
         self.person_detected(entity, attribute, old, new, kwargs)
 
     def location_update(self, entity, attribute, old, new, kwargs):
-        self.log(new)
-        self.log(old)
         if new == "home" and old != "home":
             self.log("Home Location Detected")
-            self._home_window_active = True
             if self._home_window_timer:
                 self.cancel_timer(self._home_window_timer)
             self._home_window_timer = self.run_in(self.end_home_window, 300)
+            self._home_window_active = True
             self.check_unlock_conditions()
         elif new == "away" and old != "away":
-            self.log("Detected Away..")
+            self.log("Detected Away, Locking Door.")
             self._home_window_active = False
             self.lock_door
 
@@ -66,29 +64,20 @@ class CameraLockControl(hass.Hass):
             self.log("Person Detected")
             self._person_detected_flag = True
             self.check_unlock_conditions()
-        else:
-            self._person_detected_flag = False
 
     def check_unlock_conditions(self):
-        self.log("checking unlock conditions")
-        self.log(self._person_detected_flag)
-        self.log(self.get_state(self._location_entity))
-        self.log(self._home_window_active)
-        self.unlock_door()
+        self.log("Checking unlock conditions...")
         if (
             self._person_detected_flag
             and self.get_state(self._location_entity) == "home"
             and self._home_window_active
         ):
-            self.log("trueee")
+            self.log(self._person_detected_flag)
             self.unlock_door()
-        else:
-            self.log("falseeeee")
 
     def unlock_door(self):
         self.log("checking lock state")
-        lock_state = self.get_state("lock.front_door")
-        self.log("lock.front_door")
+        lock_state = self.get_state(self._lock)
         if lock_state == "locked":
             self.log("Unlocked via Cameras")
             self.call_service(
@@ -96,6 +85,7 @@ class CameraLockControl(hass.Hass):
                 topic=f"{self._lock_topic}/set",
                 payload="UNLOCK",
             ),
+        self.end_home_window()
 
     def lock_door(self):
         lock_state = self.get_state(self._lock)

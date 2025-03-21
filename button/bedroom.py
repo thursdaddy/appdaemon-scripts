@@ -34,8 +34,7 @@ class ButtonPress(hass.Hass):
 
     def press_single(self):
         self.log(f"{self._topic} -> Turn off All Lights")
-        for entity in self._entities:
-            self.turn_off("input_boolean.lights_all")
+        self.turn_off("input_boolean.lights_all")
 
     def press_double(self):
         self.log(f"{self._topic} -> Turn on Espresso")

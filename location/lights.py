@@ -11,40 +11,40 @@ class LocationChange(hass.Hass):
 
         self._lights = self.args.get("lights")
         self._location_entity = "device_tracker.pixel_7_pro"
-        self._brightness = self.args.get("brightness", 100)
+        self._brightness = self.args.get("brightness", 50)
         self._schedule = self.args.get("schedule")
 
         self.listen_state(self.location_update, "input_boolean.test_boolean")
         self.listen_state(self.location_update, self._location_entity)
 
     def location_update(self, entity, attribute, old, new, kwargs):
-        # if new == "home" and old != "home":
         self.config = self.get_config()
 
-        if new == "on" and old != "on":
+        if new == "home" and old != "home":
+            # if new == "on" and old != "on":
             self.log("Home Location Detected")
             self.set_lights_to_home()
 
-        # elif new == "away" and old != "away":
-        elif new == "off" and old != "off":
+        elif new == "away" and old != "away":
+            # elif new == "off" and old != "off":
             self.log("Detected Away..")
             self.set_lights_to_away()
 
     def set_lights_to_away(self):
-        self.log(self.config)
-        for light in self.config:
-            self.log("away lights")
-            self.log(light)
+        self.log("away lights")
+        self.turn_off("input_boolean.lights_all")
 
     def set_lights_to_home(self):
+        self.log("home lights")
         self.log(self.config)
-        for light in self.config:
-            self.log("home lights")
-            self.log(light)
+        for light in self.config["lights"]:
+            self.turn_on(light)
 
     def get_config(self):
         for name, config in self._schedule.items():
             config["name"] = name
+            if "lights" not in config:
+                config["lights"] = self._lights
             if "brightness" not in config:
                 config["brightness"] = self._brightness
             config["brightness_adjusted"] = self.convert_brightness_value(

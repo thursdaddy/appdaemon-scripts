@@ -29,13 +29,12 @@ class PicoEvent(hass.Hass):
         elif data["button_type"] == "off" and data["action"] == "press":
             self.off_pressed(data, kwargs)
         elif data["button_type"] == "stop" and data["action"] == "press":
-            self.on_pressed(data, kwargs)
+            self.stop_pressed(data, kwargs)
 
     def on_pressed(self, data, kwargs):
         self.log(self._entities)
         for entity in self._entities:
-            state = self.get_state(entity)
-            self.log(state)
+            self.turn_on(entity)
 
     def off_pressed(self, data, kwargs):
         for entity in self._entities:
