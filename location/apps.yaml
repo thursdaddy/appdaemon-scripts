@@ -5,12 +5,11 @@ detected_away:
     - light.living_room_main_lights
     - light.hallway_main_lights
   schedule:
-    day:
-      start: sunrise
-      end: "18:00:00"
     evening:
-      start: "18:00:01"
+      start: sunset
       end: "21:00:00"
+      brightness: 50
     night:
       start: "21:00:01"
       end: sunrise
+      brightness: 25
