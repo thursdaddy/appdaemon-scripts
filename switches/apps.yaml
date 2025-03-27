@@ -29,6 +29,10 @@ lights_off:
     - switch.living_room_tv_lights
     - switch.sim_desk_light
 
+switch_tv_lights:
+  class: TvLights
+  module: tv_lights
+
 sleep_c137:
   class: BooleanComputer
   module: boolean

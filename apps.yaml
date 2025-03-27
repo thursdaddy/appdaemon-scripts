@@ -1,3 +1,0 @@
-switch_tv_lights:
-  class: TvLights
-  module: switch_tv_lights
