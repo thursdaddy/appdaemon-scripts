@@ -5,3 +5,8 @@ daily_espresso_off:
 daily_motion_on:
   class: SwitchControl
   module: enable_motion
+
+monitor_state_c137:
+  class: ComputerStateMonitor
+  module: c137
+

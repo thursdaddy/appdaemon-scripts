@@ -1,6 +1,7 @@
 import json
 
 import hassapi as hass
+import requests
 
 
 class ButtonPress(hass.Hass):
@@ -14,6 +15,7 @@ class ButtonPress(hass.Hass):
         """
         # Set in apps.yml
         self._topic = "zigbee2mqtt/button_bedroom"
+        self.timer_handler = None
 
         self._mqtt = self.get_plugin_api("MQTT")
         self._mqtt.listen_event(
@@ -29,6 +31,8 @@ class ButtonPress(hass.Hass):
                 self.press_single()
             if payload["action"] == "double":
                 self.press_double()
+            if payload["action"] == "hold":
+                self.press_hold()
         except json.JSONDecodeError:
             return
 
@@ -37,5 +41,9 @@ class ButtonPress(hass.Hass):
         self.turn_off("input_boolean.lights_all")
 
     def press_double(self):
-        self.log(f"{self._topic} -> Turn on Espresso")
-        self.turn_on("switch.kitchen_espresso")
+        self.log(f"{self._topic} -> Turn off Motion Automations")
+        self.turn_off("input_boolean.motion_all")
+
+    def press_hold(self):
+        self.log(f"{self._topic} -> Sleep c137")
+        self.turn_off("input_boolean.computer_c137")

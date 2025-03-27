@@ -28,3 +28,10 @@ lights_off:
     - light.kitchen_above_cabinet
     - switch.living_room_tv_lights
     - switch.sim_desk_light
+
+sleep_c137:
+  class: BooleanComputer
+  module: boolean
+  boolean: input_boolean.computer_c137
+  host: 192.168.10.137
+  mac: 9c:5c:8e:bc:1e:46
