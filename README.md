@@ -1,11 +1,14 @@
-# HASS - AppDaemon
+# HASS + AppDaemon = ❤️
 
 > Note: This is a WIP and pretty rough overall.
 
 ### Reasoning
 
-While it seems in 2025, AppDaemon has fallen slightly out of favor over the years as the creating HASS automations via the GUI has become more advanced and feature complete, it is still a very powerful and capable solution. I also imagine this is partially due to the higher bar of entry and lack of documented "best practices". As a vim and NixOS user, this is par for the course.
+As Home Assistant's GUI automations have become more advanced and feature-rich, AppDaemon's popularity has somewhat decreased by 2025 but it remains a powerful and capable solution.
 
+I assume the decline is partly due to its steeper learning curve and a lack of well-established best practices but as a Vim and NixOS user, this is familiar territory. 😅
+
+So here some of my half-baked reasons:
 1. I wanted more experience with Python.
 2. More feature complete logic flow and debugging via logs.
 3. I'm using zigbee2mqtt, so in some cases I can avoid having to make HASS calls altogether.
@@ -13,7 +16,7 @@ While it seems in 2025, AppDaemon has fallen slightly out of favor over the year
 
 ### Structure
 
-I've initially opted to losely organize automations by trigger type.
+I've initially opted to loosely organize automations by trigger type.
 
 For example, `motion/` for motion sensors, `tags/` for NFC tags, `cron/` for scheduled automations, etc, etc.
 
