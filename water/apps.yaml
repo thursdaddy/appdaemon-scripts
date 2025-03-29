@@ -1,0 +1,14 @@
+washing_machine_leak:
+  class: WaterDetectionNotifier
+  module: leak_detection
+  entity: water_washing_machine
+
+bedroom_bathroom_leak:
+  class: WaterDetectionNotifier
+  module: leak_detection
+  entity: water_bedroom_bathroom
+
+master_bathroom_leak:
+  class: WaterDetectionNotifier
+  module: leak_detection
+  entity: water_master_bathroom
