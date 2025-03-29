@@ -14,7 +14,7 @@ class LocationChange(hass.Hass):
         self._brightness = self.args.get("brightness", 50)
         self._schedule = self.args.get("schedule")
 
-        self.listen_state(self.location_update, "input_boolean.test_boolean")
+        # self.listen_state(self.location_update, "input_boolean.test_boolean")
         self.listen_state(self.location_update, self._location_entity)
 
     def location_update(self, entity, attribute, old, new, kwargs):
@@ -23,7 +23,25 @@ class LocationChange(hass.Hass):
         if new == "home" and old != "home":
             # if new == "on" and old != "on":
             self.log("Home Location Detected")
-            self.set_lights_to_home()
+
+            if self.config is not None:
+                self.log("Not scheduled, bye.")
+                self.set_lights_to_home()
+
+            self.call_service(
+                "notify/gotify",
+                title="I AM HOME",
+                message="Commence Automations",
+                data={
+                    "extras": {
+                        "client::display": {"contentType": "text/plain"},
+                        "client::notification": {
+                            "click": {"url": "https://home.thurs.pw/dashboard-home/0"}
+                        },
+                    },
+                    "priority": 5,
+                },
+            )
 
         elif new == "away" and old != "away":
             # elif new == "off" and old != "off":
@@ -31,11 +49,11 @@ class LocationChange(hass.Hass):
             self.set_lights_to_away()
 
     def set_lights_to_away(self):
-        self.log("away lights")
+        self.log("Away lights")
         self.turn_off("input_boolean.lights_all")
 
     def set_lights_to_home(self):
-        self.log("home lights")
+        self.log("Home lights")
         self.log(self.config)
         for light in self.config["lights"]:
             self.turn_on(light)
@@ -60,51 +78,3 @@ class LocationChange(hass.Hass):
         value = (value - 1) / 99
         value_adjusted = int(round(value * (255 - 3) + 3))
         return value_adjusted
-
-    # def end_home_window(self, kwargs):
-    #     self._home_window_active = False
-    #     self.log("Home window ended")
-    #
-    # def person_detected(self, entity, attribute, old, new, kwargs):
-    #     if new == "on":
-    #         self.log("Person Detected")
-    #         self._person_detected_flag = True
-    #         self.check_unlock_conditions()
-    #     else:
-    #         self._person_detected_flag = False
-    #
-    # def check_unlock_conditions(self):
-    #     self.log("checking unlock conditions")
-    #     self.log(self._person_detected_flag)
-    #     self.log(self.get_state(self._location_entity))
-    #     self.log(self._home_window_active)
-    #     self.unlock_door()
-    #     if (
-    #         self._person_detected_flag
-    #         and self.get_state(self._location_entity) == "home"
-    #         and self._home_window_active
-    #     ):
-    #         self.log("trueee")
-    #         self.unlock_door()
-    #     else:
-    #         self.log("falseeeee")
-    #
-    # def unlock_door(self):
-    #     self.log("checking lock state")
-    #     lock_state = self.get_state("lock.front_door")
-    #     self.log("lock.front_door")
-    #     if lock_state == "locked":
-    #         self.log("Unlocked via Cameras")
-    #         self.call_service(
-    #             "mqtt/publish",
-    #             topic=f"{self._lock_topic}/set",
-    #             payload="UNLOCK",
-    #         ),
-    #
-    # def lock_door(self):
-    #     lock_state = self.get_state(self._lock)
-    #     if lock_state == "unlocked":
-    #         self.log("Locked via Location")
-    #         self.call_service(
-    #             "mqtt/publish",
-    #             topic=f"{self._lock_topic}/set",
