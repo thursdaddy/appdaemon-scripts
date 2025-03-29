@@ -73,6 +73,7 @@ class CameraLockControl(hass.Hass):
             and self.get_state(self._location_entity) == "home"
             and self._home_window_active
         ):
+            self.log("Unlocking via Cameras")
             self.unlock_door()
         else:
             self.log("not unlocking")
@@ -81,7 +82,6 @@ class CameraLockControl(hass.Hass):
         self.log("checking lock state")
         lock_state = self.get_state(self._lock)
         if lock_state == "locked":
-            self.log("Unlocked via Cameras")
             self.call_service(
                 "mqtt/publish",
                 topic=f"{self._lock_topic}/set",
