@@ -1,0 +1,7 @@
+climate_schedule:
+  class: NestClimateManager
+  module: hvac
+
+hvac_tracker:
+  class: HVACCostTracker
+  module: tracker
