@@ -39,3 +39,27 @@ sleep_c137:
   boolean: input_boolean.computer_c137
   host: 192.168.10.137
   mac: 9c:5c:8e:bc:1e:46
+
+sleep_sim:
+  class: BooleanComputer
+  module: boolean
+  boolean: input_boolean.computer_sim
+  host: 192.168.10.116
+  mac: 9c:6b:00:14:ac:a5
+
+sleep_gamer:
+  class: BooleanComputer
+  module: boolean
+  boolean: input_boolean.computer_gamer
+  host: 192.168.10.169
+  mac: a8:a1:59:ec:99:ad
+
+toggle_sim:
+  class: BooleanSIM
+  module: boolean
+  boolean: input_boolean.activity_sim
+  entities:
+    - switch.sim_spotlight
+    - switch.projector
+    - switch.sim_fan
+    - input_boolean.computer_sim

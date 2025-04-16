@@ -123,3 +123,26 @@ class BooleanComputer(hass.Hass):
             self.log("wakeonlan command not found.", level="ERROR")
         except Exception as e:
             self.log(f"An unexpected error occured: {e}", level="ERROR")
+
+
+class BooleanSIM(hass.Hass):
+
+    def initialize(self):
+        self._boolean = self.args.get("boolean")
+        self._entities = self.args.get("entities")
+
+        self.listen_state(self.callback, self._boolean)
+
+    def callback(self, entity, attribute, old, new, kwargs):
+        if new == "on":
+            self.turn_on_sim()
+        if new == "off":
+            self.turn_off_sim()
+
+    def turn_on_sim(self):
+        for entity in self._entities:
+            self.turn_on(entity)
+
+    def turn_off_sim(self):
+        for entity in self._entities:
+            self.turn_off(entity)

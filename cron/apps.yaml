@@ -8,5 +8,18 @@ daily_motion_on:
 
 monitor_state_c137:
   class: ComputerStateMonitor
-  module: c137
+  module: computer
+  ip: 192.168.10.137
+  boolean: input_boolean.computer_c137
 
+monitor_state_gamer:
+  class: ComputerStateMonitor
+  module: computer
+  ip: 192.168.10.169
+  boolean: input_boolean.computer_gamer
+
+monitor_state_sim:
+  class: ComputerStateMonitor
+  module: computer
+  ip: 192.168.10.116
+  boolean: input_boolean.computer_sim

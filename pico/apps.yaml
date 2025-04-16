@@ -11,3 +11,14 @@ living_room_pico:
   pico: button.pico_living_room
   entities:
     - light.living_room_main_lights
+
+sim_room_pico:
+  class: PicoEvent
+  module: sim
+  pico: button.pico_sim
+  entities:
+    - switch.sim_spotlight
+    - switch.projector
+    - switch.sim_fan
+    - input_boolean.activity_sim
+    - input_boolean.computer_sim
