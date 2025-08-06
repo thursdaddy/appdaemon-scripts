@@ -27,6 +27,8 @@ class PicoEvent(hass.Hass):
             self.on_pressed(data, kwargs)
         elif data["button_type"] == "off" and data["action"] == "press":
             self.off_pressed(data, kwargs)
+        elif data["button_type"] == "lower" and data["action"] == "press":
+            self.lower_pressed(data, kwargs)
         elif data["button_type"] == "stop" and data["action"] == "press":
             self.stop_pressed(data, kwargs)
 
@@ -39,6 +41,10 @@ class PicoEvent(hass.Hass):
         self.log("turn off")
         for entity in self._entities:
             self.turn_off(entity)
+
+    def lower_pressed(self, data, kwargs):
+        self.log("turn off c137")
+        self.turn_off("input_boolean.computer_c137")
 
     def stop_pressed(self, data, kwargs):
         self.log("toggle")

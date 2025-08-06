@@ -1,4 +1,4 @@
-kitchen_motion:
+kitchen_motion_cabinet:
   class: MotionLights
   module: lutron
   motion_sensor: zigbee2mqtt/motion_kitchen
@@ -24,7 +24,7 @@ kitchen_motion:
       lights:
         - light.kitchen_under_cabinet
 
-kitchen_alt_motion:
+kitchen_motion_main:
   class: MotionLights
   module: lutron
   motion_sensor: zigbee2mqtt/motion_kitchen
@@ -55,7 +55,7 @@ kitchen_alt_motion:
     night:
       start: "21:00:01"
       end: sunrise
-      brightness: 10
+      brightness: 25
       delay: 10
       lights:
         - light.hallway_main_lights
@@ -98,19 +98,19 @@ stairway_motion:
       start: sunrise
       end: "18:00:00"
       brightness: 80
-      color: [255, 247, 255]
+      color: [255, 157, 71]
       delay: 120
     evening:
       start: "18:00:01"
       end: "22:00:00"
       color: [255, 157, 71]
-      brightness: 100
+      brightness: 60
       delay: 120
     night:
       start: "22:00:01"
       end: "sunrise - 00:00:01"
       color: [255, 28, 20]
-      brightness: 5
+      brightness: 1
       delay: 30
       lights:
         - light.upstairs_light_1

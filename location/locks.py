@@ -21,8 +21,6 @@ class CameraLockControl(hass.Hass):
         self._home_window_active = False
 
         # person detection
-        self._person_detected_flag = False
-
         self.listen_state(self.home_callback, self._location_entity)
         self.listen_state(self.camera_callback, self._camera)
 
@@ -61,35 +59,24 @@ class CameraLockControl(hass.Hass):
     def person_detected(self, entity, attribute, old, new, kwargs):
         if new == "on":
             self.log("Person Detected")
-            self._person_detected_flag = True
             self.check_unlock_conditions()
 
     def check_unlock_conditions(self):
         self.log("Checking unlock conditions...")
-        self.log(f"person_detected_flag = {self._person_detected_flag}")
-        self.log(f"home window active = {self._home_window_active}")
-        if (
-            self._person_detected_flag
-            and self.get_state(self._location_entity) == "home"
-            and self._home_window_active
-        ):
+        if self.get_state(self._location_entity) == "home" and self._home_window_active:
             self.log("Unlocking via Cameras")
             self.unlock_door()
         else:
             self.log("not unlocking")
 
     def unlock_door(self):
-        self.log("checking lock state")
-        lock_state = self.get_state(self._lock)
-        if lock_state == "locked":
-            self.call_service(
-                "mqtt/publish",
-                topic=f"{self._lock_topic}/set",
-                payload="UNLOCK",
-            ),
+        self.call_service(
+            "mqtt/publish",
+            topic=f"{self._lock_topic}/set",
+            payload="UNLOCK",
+        ),
         if self._home_window_timer:
             self.cancel_timer(self._home_window_timer)
-        self._home_window_active = False
 
     def lock_door(self):
         lock_state = self.get_state(self._lock)

@@ -18,6 +18,7 @@ class MotionLights(hass.Hass):
         self._lights = self.args.get("lights", None)
         self._schedule = self.args.get("schedule", None)
         self._brightness = self.args.get("brightness", 75)
+        self._delay = self.args.get("delay", 30)
         self.motion_control = self._motion_sensor.replace(
             "zigbee2mqtt/", "input_boolean."
         )

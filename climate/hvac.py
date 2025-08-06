@@ -3,103 +3,180 @@ from datetime import datetime
 import appdaemon.plugins.hass.hassapi as hass
 
 
-class NestClimateManager(hass.Hass):
-    """
-    AppDaemon app to manage a Nest thermostat based on Electron Provider time-of-use plans,
-    and daily high forecast.
-    """
-
+class ClimateSchedule(hass.Hass):
     def initialize(self):
-        """Initialize the app."""
-        self.log("NestClimateManager Initialized.")
+        self.climate_entity = self.args.get("climate_entity")
+        self.forecast_sensor = self.args.get("forecast_sensor")
+        self.high_temp_threshold = self.args.get("high_temp_threshold", 85)
+        self.climate_comfort_temp = self.args.get("climate_comfort_temp", 83)
+        self.on_peak_temp = self.args.get("on_peak_temp", 85)
+        self.off_peak_temp = self.args.get("off_peak_temp", 80)
+        self.manual_control_entity = (
+            "input_boolean.hvac_manual_control"  # Define the manual control entity
+        )
+        self.presence_entity = "device_tracker.pixel_7_pro"
 
-        # Define entities and settings
-        self.nest_entity = "climate.nest"
-        self.forecast_sensor = "sensor.forecast_today_high"
-        self.high_temp_threshold = 85
-        self.climate_peak_temp = 82
-        self.climate_comfort_temp = 78
+        if not self.climate_entity:
+            self.error("climate_entity not defined in apps.yaml")
+            return
+        if not self.forecast_sensor:
+            self.error("forecast_sensor not defined in apps.yaml")
+            return
 
-        # Listen for daily forecast check
-        self.run_daily(self.check_daily_forecast, "04:00:00")
+        self.run_every(
+            self.check_manual_override, "now+1", 360
+        )  # Run every 10 seconds for testing
+        self.run_daily(self.check_daily_forecast, "04:00:00")  # Keep daily at 4:00 AM
+
+    def check_manual_override(self, kwargs):
+        """Checks if manual control is enabled."""
+        manual_control_state = self.get_state(self.manual_control_entity)
+        if manual_control_state == "on":
+            self.log("HVAC manual control is ON. Skipping automatic adjustments.")
+            return
+        self.check_schedule_and_set_climate()
+
+    def check_presence(self):
+        """Checks if the presence entity is home."""
+        presence_state = self.get_state(self.presence_entity)
+        if presence_state == "home":
+            return True
+        else:
+            self.log("NOT HOME - Skipping HVAC adjustments.")
+            return False
+
+    def check_set_temperature(self, desired_temp):
+        """Checks the current temperature and sets it if it doesn't match."""
+        current_state = self.get_state(self.climate_entity, attribute="temperature")
+        if current_state is not None:
+            try:
+                current_temp = float(current_state)
+                if current_temp != desired_temp:
+                    self.log(
+                        f"Current temperature ({current_temp}) does not match desired ({desired_temp})."
+                    )
+                    return False  # Temperature needs to be set
+                else:
+                    self.log(
+                        f"Current temperature ({current_temp}) matches desired ({desired_temp}). No action needed."
+                    )
+                    return True  # Temperature already matches
+            except ValueError:
+                self.log(f"Error: Could not parse current temperature: {current_state}")
+                return False
+        else:
+            self.log(f"Error: Could not get current state of {self.climate_entity}")
+            return False
+
+    def check_schedule_and_set_climate(self):
+        if not self.check_presence():
+            return
+
+        now = datetime.now()
+        month = now.month
+        now_time_str = now.strftime("%H:%M:%S")
+
+        peak_status = self.determine_peak_status(month, now_time_str)
+
+        if peak_status == "on_peak":
+            desired_temp = self.on_peak_temp
+            self.log(
+                f"Current time ({now_time_str}) is on-peak. Desired temperature: {desired_temp}"
+            )
+            if not self.check_set_temperature(desired_temp):
+                self.set_hvac_mode("cool", desired_temp)
+        elif peak_status == "off_peak":
+            desired_temp = self.off_peak_temp
+            self.log(
+                f"Current time ({now_time_str}) is off-peak. Desired temperature: {desired_temp}"
+            )
+            if not self.check_set_temperature(desired_temp):
+                self.set_hvac_mode("cool", desired_temp)
+        else:
+            self.log(f"Current time ({now_time_str}) is neither on-peak nor off-peak.")
+
+    def determine_peak_status(self, month, now_time_str):
+        schedule = self.args.get("schedule", {})
+
+        # Check for summer on-peak (May through October)
+        if 5 <= month <= 10:
+            if "summer" in schedule.get("on_peak", {}):
+                hours_list = schedule["on_peak"]["summer"].get("hours", [])
+                for time_range in hours_list:
+                    start_time_str, end_time_str = time_range.split("-")
+                    if self.now_is_between(start_time_str, end_time_str):
+                        return "on_peak"
+
+        # Check for winter on-peak periods (November through April)
+        if 11 <= month <= 12 or 1 <= month <= 4:
+            if "winter" in schedule.get("on_peak", {}):
+                hours_list = schedule["on_peak"]["winter"].get("hours", [])
+                for time_range in hours_list:
+                    start_time_str, end_time_str = time_range.split("-")
+                    if self.now_is_between(start_time_str, end_time_str):
+                        return "on_peak"
+
+        # Check for summer off-peak (May through October)
+        if 5 <= month <= 10:
+            if "summer" in schedule.get("off_peak", {}):
+                hours_list = schedule["off_peak"]["summer"].get("hours", [])
+                for time_range in hours_list:
+                    start_time_str, end_time_str = time_range.split("-")
+                    if self.now_is_between(start_time_str, end_time_str):
+                        return "off_peak"
+
+        # Check for winter off-peak periods (November through April)
+        if 11 <= month <= 12 or 1 <= month <= 4:
+            if "winter" in schedule.get("off_peak", {}):
+                hours_list = schedule["off_peak"]["winter"].get("hours", [])
+                for time_range in hours_list:
+                    start_time_str, end_time_str = time_range.split("-")
+                    if self.now_is_between(start_time_str, end_time_str):
+                        return "off_peak"
+
+        return None
 
     def check_daily_forecast(self, kwargs):
-        """
-        Check the daily forecast and set the thermostat mode and temperature.
-        This runs at 4:00 AM.
-        """
         forecast_high = self.get_state(self.forecast_sensor)
-        self.log(f"Checking daily forecast.  Forecasted high is {forecast_high}")
+        self.log(f"Checking daily forecast. Forecasted high is {forecast_high}")
 
         try:
             forecast_high_temp = float(forecast_high)
             if forecast_high_temp > self.high_temp_threshold:
+                desired_temp = self.climate_comfort_temp
                 self.log(
-                    f"Forecast high ({forecast_high_temp}) is above threshold ({self.high_temp_threshold}). Setting Nest to cool at {self.climate_comfort_temp}."
+                    f"Forecast high ({forecast_high_temp}) is above threshold ({self.high_temp_threshold}). Desired temperature: {desired_temp}"
                 )
-                self.set_hvac_mode(
-                    hvac_mode="cool", target_temp=self.climate_comfort_temp
-                )
+                if not self.check_set_temperature(desired_temp):
+                    self.set_hvac_mode("cool", desired_temp)
             else:
                 self.log(
-                    f"Forecast high ({forecast_high_temp}) is below threshold ({self.high_temp_threshold}). Turning off Nest."
+                    f"Forecast high ({forecast_high_temp}) is below threshold ({self.high_temp_threshold}). Setting HVAC to off."
                 )
-                self.set_hvac_mode(hvac_mode="off")
+                self.set_hvac_mode("off")
         except ValueError:
             self.log(
-                f"Error: Could not convert forecast high ({forecast_high}) to a number.  Skipping daily forecast check."
+                f"Error: Could not convert forecast high ({forecast_high}) to a number. Skipping daily forecast check."
             )
             return
 
-        # Check Electron Provider time of use and adjust temperature
-        self.check_utility_provider_rate()
-
-    def check_utility_provider_rate(self):
-        """
-        Check Electron Provider time of use and set the thermostat temperature.
-        """
-        now = datetime.now()
-        month = now.month
-        hour = now.hour
-
-        # Electron Provider Time of Use logic
-        is_peak = False
-        if 5 <= month <= 10:  # Summer (May to October)
-            if 14 <= hour < 20:  # 2 PM to 8 PM
-                is_peak = True
-        elif 11 <= month <= 4:  # Winter (November to April)
-            if (5 <= hour < 9) or (17 <= hour < 21):  # 5 AM to 9 AM and 5 PM to 9 PM
-                is_peak = True
-
-        if is_peak:
-            self.log(
-                f"Electron Provider peak hours. Setting Nest temperature to {self.climate_peak_temp}."
-            )
-            self.set_hvac_mode(
-                hvac_mode="cool", target_temp=self.climate_peak_temp
-            )  # set to cool during peak
-        else:
-            self.log(
-                f"Electron Provider off-peak hours. Setting Nest temperature to {self.climate_comfort_temp}."
-            )
-            self.set_hvac_mode(hvac_mode="cool", target_temp=self.climate_comfort_temp)
-
     def set_hvac_mode(self, hvac_mode, target_temp=None):
-        """
-        Set the HVAC mode and temperature of the Nest thermostat.
-
-        Args:
-            hvac_mode (str): The HVAC mode to set (e.g., "cool", "off").
-            target_temp (float, optional): The target temperature to set. Defaults to None.
-        """
-        self.log(f"Setting HVAC mode to {hvac_mode}")
-        self.call_service(
-            "climate/set_hvac_mode", entity_id=self.nest_entity, hvac_mode=hvac_mode
-        )
-        if target_temp is not None:
-            self.log(f"Setting target temperature to {target_temp}")
+        """Helper function to try and set the HVAC mode."""
+        if hvac_mode == "cool" and target_temp is not None:
+            self.log(f"Setting {self.climate_entity} to cool at {target_temp}")
             self.call_service(
                 "climate/set_temperature",
-                entity_id=self.nest_entity,
+                entity_id=self.climate_entity,
                 temperature=target_temp,
+            )
+        elif hvac_mode == "off":
+            self.log(f"Setting {self.climate_entity} to off")
+            self.call_service(
+                "climate/set_hvac_mode",
+                entity_id=self.climate_entity,
+                hvac_mode="off",
+            )
+        else:
+            self.log(
+                f"Warning: set_hvac_mode with '{hvac_mode}' might not be fully handled."
             )

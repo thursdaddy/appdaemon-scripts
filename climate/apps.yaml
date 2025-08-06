@@ -1,7 +1,32 @@
-climate_schedule:
-  class: NestClimateManager
-  module: hvac
-
 hvac_tracker:
   class: HVACCostTracker
   module: tracker
+
+climate_control:
+  module: hvac
+  class: ClimateSchedule
+  climate_entity: climate.nest
+  forecast_sensor: sensor.forecast_today_high
+  high_temp_threshold: 85
+  climate_comfort_temp: 80
+  on_peak_temp: 83
+  off_peak_temp: 80
+  schedule:
+    on_peak:
+      summer: # May through Oct
+        hours:
+          - "14:00:00-20:00:00"
+      winter: # November through April
+        hours:
+          - "05:00:00-09:00:00"
+          - "17:00:00-21:00:00"
+    off_peak:
+      summer:  # May through Oct
+        hours:
+          - "00:00:00-14:00:00"
+          - "20:00:00-00:00:00"
+      winter: # November through April
+        hours:
+          - "00:00:00-05:00:00"
+          - "09:00:00-17:00:00"
+          - "21:00:00-00:00:00"
