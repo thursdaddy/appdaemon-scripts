@@ -29,7 +29,6 @@ class CameraLockControl(hass.Hass):
             self.log("Smart Lock automation disabled!")
             return
 
-        self.log("home callback")
         self.location_update(entity, attribute, old, new, kwargs)
 
     def camera_callback(self, entity, attribute, old, new, kwargs):
@@ -37,7 +36,6 @@ class CameraLockControl(hass.Hass):
             self.log("Smart Lock automation disabled!")
             return
 
-        self.log("camera callback")
         self.person_detected(entity, attribute, old, new, kwargs)
 
     def location_update(self, entity, attribute, old, new, kwargs):
@@ -53,7 +51,9 @@ class CameraLockControl(hass.Hass):
                 self.cancel_timer(self._home_window_timer)
 
     def end_home_window(self, kwargs):
-        self._home_window_active = False
+        if self._home_window_timer:
+            self.cancel_timer(self._home_window_timer)
+            self._home_window_active = False
         self.log("Home window ended")
 
     def person_detected(self, entity, attribute, old, new, kwargs):
@@ -67,16 +67,16 @@ class CameraLockControl(hass.Hass):
             self.log("Unlocking via Cameras")
             self.unlock_door()
         else:
-            self.log("not unlocking")
+            self.log("Not unlocking, detected away..")
 
     def unlock_door(self):
+        if self._home_window_timer:
+            self.cancel_timer(self._home_window_timer)
         self.call_service(
             "mqtt/publish",
             topic=f"{self._lock_topic}/set",
             payload="UNLOCK",
         ),
-        if self._home_window_timer:
-            self.cancel_timer(self._home_window_timer)
 
     def lock_door(self):
         lock_state = self.get_state(self._lock)

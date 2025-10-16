@@ -1,12 +1,12 @@
 back_door_camera:
   class: CameraLockControl
-  module: locks
+  module: camera
   lock: lock_back_door
   camera: binary_sensor.back_door_person_detected
 
 front_door_camera:
   class: CameraLockControl
-  module: locks
+  module: camera
   lock: lock_front_door
   camera: binary_sensor.g4_doorbell_person_detected
 

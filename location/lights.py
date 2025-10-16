@@ -18,9 +18,7 @@ class LocationChange(hass.Hass):
         self._brightness = self.args.get("brightness", 50)
         self._schedule = self.args.get("schedule")
 
-        self.listen_state(self.location_update, "input_boolean.test_boolean")
-        # self.listen_state(self.location_update, self._location_entity)
-
+        self.listen_state(self.location_update, self._location_entity)
         self.timer_handler = None
 
         # home detection flags
