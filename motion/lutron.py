@@ -19,6 +19,7 @@ class MotionLights(hass.Hass):
         self._schedule = self.args.get("schedule", None)
         self._brightness = self.args.get("brightness", 75)
         self._delay = self.args.get("delay", 30)
+        self._debug_mode = self.args.get("debug", False)
         self.motion_control = self._motion_sensor.replace(
             "zigbee2mqtt/", "input_boolean."
         )
@@ -42,32 +43,49 @@ class MotionLights(hass.Hass):
             )
             return
 
+        # Log configuration loading
+        self.log("============================")
+        self.log(f"  Motion Sensor:  {self._motion_sensor}")
+        self.log(f"  Default Lights: {self._lights}")
+        self.log(f"  Default Delay:  {self._delay}s")
+        self.log(f"  Default Bright: {self._brightness}%")
+        self.log(f"  Schedules:      {list(self._schedule.keys()) if self._schedule else 'None'}")
+        self.log(f"  Debug Mode:     {'ENABLED' if self._debug_mode else 'DISABLED'}")
+        self.log("=== Configuration Loaded ===")
+
         self.mqtt_api.listen_event(
             self.mqtt_callback, "MQTT_MESSAGE", topic=self._motion_sensor
         )
 
+    def debug_log(self, message):
+        if self._debug_mode:
+            self.log(f"[DEBUG] {message}")
+
     def mqtt_callback(self, event_name, data, kwargs):
         motion_control = self.get_state(self.motion_control)
         if motion_control == "off":
-            self.log("Motion Disabled, bye.")
+            self.debug_log("Motion Disabled, bye.")
             return
         try:
             payload = json.loads(data["payload"])
+            self.debug_log(f"Incoming MQTT message: {payload}")
             self.config = self.get_config()
             if self.config is None:
-                self.log("[WARN] No active schedule found, not processing motion event.")
+                self.debug_log("No active schedule found, not processing motion event.")
                 return
 
             if "occupancy" in payload and payload["occupancy"] is True:
                 self.log("Motion Detected!")
 
                 if self.info_timer(self.timer_handler) is not None:
+                    self.debug_log("Canceling active off timer.")
                     self.cancel_timer(self.timer_handler)
 
                 self.turn_on_lights()
 
             elif "occupancy" in payload and payload["occupancy"] is False:
                 self.log("Motion Cleared!")
+                self.debug_log(f"Scheduling turn-off in {self.config['delay']}s")
                 self.timer_handler = self.run_in(
                     self.turn_off_lights, self.config["delay"]
                 )

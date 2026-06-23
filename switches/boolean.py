@@ -10,6 +10,7 @@ class BooleanControlLights(hass.Hass):
         self._boolean = self.args.get("boolean")
         self._entities = self.args.get("entities")
 
+        self.log(f"BooleanControlLights initialized. Boolean: {self._boolean}, Entities: {self._entities}")
         self.listen_state(self.callback, self._boolean)
 
     def callback(self, entity, attribute, old, new, kwargs):
@@ -30,6 +31,7 @@ class BooleanControlMotion(hass.Hass):
         self._boolean = self.args.get("boolean")
         self._entities = self.args.get("entities")
 
+        self.log(f"BooleanControlMotion initialized. Boolean: {self._boolean}, Entities: {self._entities}")
         self.listen_state(self.callback, self._boolean)
 
     def callback(self, entity, attribute, old, new, kwargs):
@@ -59,6 +61,7 @@ class ComputerManager(hass.Hass):
         self._mac = self.args.get("mac")
         self._sleep_retry_count = 0  # Initialize the retry counter
 
+        self.log(f"ComputerManager initialized. Boolean: {self._boolean}, Host: {self._host}, MAC: {self._mac}")
         self.listen_state(self.callback, self._boolean)
 
     def callback(self, entity, attribute, old, new, kwargs):
@@ -131,6 +134,7 @@ class BooleanSIM(hass.Hass):
         self._boolean = self.args.get("boolean")
         self._entities = self.args.get("entities")
 
+        self.log(f"BooleanSIM initialized. Boolean: {self._boolean}, Entities: {self._entities}")
         self.listen_state(self.callback, self._boolean)
 
     def callback(self, entity, attribute, old, new, kwargs):

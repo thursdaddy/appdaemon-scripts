@@ -8,6 +8,7 @@ class PicoEvent(BaseController):
 
     def initialize(self):
         self._device_name = self.args.get("device_name")
+        self._debug_mode = self.args.get("debug", False)
         raw_actions = self.args.get("actions", {})
 
         # Normalize keys to strings to handle YAML parsing of on/off/yes/no as booleans
@@ -23,8 +24,19 @@ class PicoEvent(BaseController):
             self.error("device_name not provided in configuration.")
             return
 
+        # Log configuration loading
+        self.log("============================")
+        self.log(f"  Device Name: {self._device_name}")
+        self.log(f"  Actions:     {list(self._actions.keys())}")
+        self.log(f"  Debug Mode:  {'ENABLED' if self._debug_mode else 'DISABLED'}")
+        self.log("=== Configuration Loaded ===")
+
         self._hass = self.get_plugin_api("HASS")
         self.listen_event(self.callback, "lutron_caseta_button_event")
+
+    def debug_log(self, message):
+        if self._debug_mode:
+            self.log(f"[DEBUG] {message}")
 
     def callback(self, event, data, kwargs):
         if data.get("device_name") != self._device_name:

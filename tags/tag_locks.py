@@ -13,6 +13,13 @@ class UnlockDoor(hass.Hass):
         self._lock = self.args.get("lock")
         self._lock_topic = f"zigbee2mqtt/{self._lock}"
 
+        # Log configuration loading
+        self.log("============================")
+        self.log(f"  Tag Entity: {self._tag}")
+        self.log(f"  Lock name:  {self._lock}")
+        self.log(f"  Lock topic: {self._lock_topic}")
+        self.log("=== Configuration Loaded ===")
+
         self._entity = self.get_entity(self._tag)
         self.handle = self._entity.listen_state(self.tag_callback)
 

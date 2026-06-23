@@ -14,6 +14,12 @@ class SwitchControl(BaseController):
             self.error("time not provided in configuration.")
             return
 
+        # Log configuration loading
+        self.log("============================")
+        self.log(f"  Time:       {self._time}")
+        self.log(f"  Actions:    {self._actions}")
+        self.log("=== Configuration Loaded ===")
+
         self.run_daily(self.execute_scheduled_actions, self._time)
 
     def execute_scheduled_actions(self, kwargs):

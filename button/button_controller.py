@@ -9,6 +9,7 @@ class ButtonPress(BaseController):
 
     def initialize(self):
         self._topic = self.args.get("topic")
+        self._debug_mode = self.args.get("debug", False)
         raw_actions = self.args.get("actions", {})
 
         # Normalize keys to strings to handle YAML parsing of on/off/yes/no as booleans
@@ -24,6 +25,13 @@ class ButtonPress(BaseController):
             self.error("topic not provided in configuration.")
             return
 
+        # Log configuration loading
+        self.log("============================")
+        self.log(f"  Topic:      {self._topic}")
+        self.log(f"  Actions:    {list(self._actions.keys())}")
+        self.log(f"  Debug Mode: {'ENABLED' if self._debug_mode else 'DISABLED'}")
+        self.log("=== Configuration Loaded ===")
+
         self._mqtt = self.get_plugin_api("MQTT")
         self._mqtt.listen_event(
             self.callback,
@@ -31,10 +39,16 @@ class ButtonPress(BaseController):
             topic=self._topic,
         )
 
+    def debug_log(self, message):
+        if self._debug_mode:
+            self.log(f"[DEBUG] {message}")
+
     def callback(self, event_name, data, kwargs):
         payload_raw = data.get("payload")
         if not payload_raw:
             return
+
+        self.debug_log(f"Incoming MQTT message: {payload_raw}")
 
         try:
             payload = json.loads(payload_raw)
@@ -51,4 +65,4 @@ class ButtonPress(BaseController):
             self.log(f"Button action triggered: {normalized_action}")
             super().execute_actions(self._actions[normalized_action])
         else:
-            self.log(f"No actions defined for action_type: {normalized_action}")
+            self.debug_log(f"No actions defined for action_type: {normalized_action}")

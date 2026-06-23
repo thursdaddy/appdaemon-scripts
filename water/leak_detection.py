@@ -21,9 +21,12 @@ class WaterDetectionNotifier(hass.Hass):
         self.mqtt_api.listen_event(
             self.mqtt_event, "MQTT_MESSAGE", topic=self._entity_topic
         )
-        self.log(self._entity)
-        self.log(self._entity_topic)
-        self.log(self._entity_sensor)
+        # Log configuration loading
+        self.log("============================")
+        self.log(f"  Entity:        {self._entity}")
+        self.log(f"  Entity Topic:  {self._entity_topic}")
+        self.log(f"  Entity Sensor: {self._entity_sensor}")
+        self.log("=== Configuration Loaded ===")
 
     def mqtt_event(self, event_name, data, kwargs):
         payload = data["payload"]
