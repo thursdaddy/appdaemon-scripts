@@ -10,38 +10,33 @@ class ClimateSchedule(hass.Hass):
         self.manual_control_entity = self.args.get("manual_control_entity", "input_boolean.hvac_manual_control")
 
         self.high_temp_threshold = float(self.args.get("high_temp_threshold", 85.0))
-        self.climate_comfort_temp = float(self.args.get("climate_comfort_temp", 83.0))
+        self.climate_comfort_temp = float(self.args.get("climate_comfort_temp", 80.0))
+        self.super_off_peak_temp = float(self.args.get("super_off_peak_temp", 75.0))
+        self.off_peak_temp = float(self.args.get("off_peak_temp", 78.0))
         self.on_peak_temp = float(self.args.get("on_peak_temp", 85.0))
-        self.off_peak_temp = float(self.args.get("off_peak_temp", 80.0))
 
         self._debug_mode = self.args.get("debug", False)
 
-        # --- Parse On-Peak Windows ---
-        self.on_peak_windows = {}
+        # --- Parse E-16 Windows ---
         schedule_arg = self.args.get("schedule", {})
+        
         on_peak_arg = schedule_arg.get("on_peak", {})
+        self.on_peak_hours = on_peak_arg.get("hours", ["17:00:00-22:00:00"])
+        self.on_peak_weekdays_only = on_peak_arg.get("weekdays_only", True)
 
-        for season in ["summer", "winter"]:
-            season_on_peak = on_peak_arg.get(season, {})
-            hours = season_on_peak.get("hours", [])
-            if hours:
-                self.on_peak_windows[season] = hours
-
-        # Fallback to default hard-coded windows if none configured
-        if "summer" not in self.on_peak_windows:
-            self.on_peak_windows["summer"] = ["15:00:00-19:00:00"]
-        if "winter" not in self.on_peak_windows:
-            self.on_peak_windows["winter"] = ["06:00:00-09:00:00", "18:00:00-21:00:00"]
+        super_off_peak_arg = schedule_arg.get("super_off_peak", {})
+        self.super_off_peak_hours = super_off_peak_arg.get("hours", ["08:00:00-15:00:00"])
+        self.super_off_peak_weekdays_only = super_off_peak_arg.get("weekdays_only", False)
 
         # --- Configuration Output ---
         self.log("============================")
-        self.log(f"  Climate:       {self.climate_entity}")
-        self.log(f"  Comfort Temp:  {self.climate_comfort_temp}F")
-        self.log(f"  Peak Temp:     {self.on_peak_temp}F")
-        self.log(f"  Off-Peak Temp: {self.off_peak_temp}F")
-        self.log(f"  Summer Peak:   {self.on_peak_windows['summer']}")
-        self.log(f"  Winter Peak:   {self.on_peak_windows['winter']}")
-        self.log(f"  Debug Mode:    {'ENABLED' if self._debug_mode else 'DISABLED'}")
+        self.log(f"  Climate:             {self.climate_entity}")
+        self.log(f"  Super Off-Peak Temp: {self.super_off_peak_temp}F")
+        self.log(f"  Off-Peak Temp:       {self.off_peak_temp}F")
+        self.log(f"  On-Peak Temp:        {self.on_peak_temp}F")
+        self.log(f"  On-Peak Hours:       {self.on_peak_hours} (Weekdays only: {self.on_peak_weekdays_only})")
+        self.log(f"  Super Off-Peak Hours: {self.super_off_peak_hours} (Weekdays only: {self.super_off_peak_weekdays_only})")
+        self.log(f"  Debug Mode:          {'ENABLED' if self._debug_mode else 'DISABLED'}")
         self.log("===        CONFIG        ===")
 
         # Run checks (Every 6 minutes)
@@ -65,20 +60,36 @@ class ClimateSchedule(hass.Hass):
         self.check_schedule_and_set_climate()
 
     def check_schedule_and_set_climate(self):
-        """Calculates current season and checks windows"""
-        month = self.datetime().month
-        season = "summer" if 5 <= month <= 10 else "winter"
-
-        # Binary Logic: It's either Peak or it's Off-Peak
-        if self.is_now_peak(season):
+        """Calculates setpoint based on current schedule tier"""
+        if self.is_now_peak():
             self.apply_temperature(self.on_peak_temp, "On-Peak")
+        elif self.is_now_super_off_peak():
+            self.apply_temperature(self.super_off_peak_temp, "Super Off-Peak")
         else:
             self.apply_temperature(self.off_peak_temp, "Off-Peak")
 
-    def is_now_peak(self, season):
-        """Returns True if current time matches any On-Peak window"""
-        windows = self.on_peak_windows.get(season, [])
-        for window in windows:
+    def is_now_peak(self):
+        """Returns True if current time matches On-Peak window"""
+        if self.on_peak_weekdays_only:
+            # isoweekday() returns 1 (Monday) to 7 (Sunday)
+            weekday = self.datetime().isoweekday()
+            if weekday not in [1, 2, 3, 4, 5]:
+                return False
+
+        for window in self.on_peak_hours:
+            start, end = window.split("-")
+            if self.now_is_between(start, end):
+                return True
+        return False
+
+    def is_now_super_off_peak(self):
+        """Returns True if current time matches Super Off-Peak window"""
+        if self.super_off_peak_weekdays_only:
+            weekday = self.datetime().isoweekday()
+            if weekday not in [1, 2, 3, 4, 5]:
+                return False
+
+        for window in self.super_off_peak_hours:
             start, end = window.split("-")
             if self.now_is_between(start, end):
                 return True

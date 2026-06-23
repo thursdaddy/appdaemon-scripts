@@ -5,37 +5,31 @@ climate_control:
   forecast_sensor: sensor.forecast_today_high
   high_temp_threshold: 85
   climate_comfort_temp: 80
-  on_peak_temp: 83
-  off_peak_temp: 80
+  super_off_peak_temp: 75.0
+  off_peak_temp: 78.0
+  on_peak_temp: 85.0
   schedule: &hvac_schedule
     on_peak:
-      summer: # May through Oct
-        hours:
-          - "14:00:00-20:00:00"
-      winter: # November through April
-        hours:
-          - "05:00:00-09:00:00"
-          - "17:00:00-21:00:00"
-    off_peak:
-      summer:  # May through Oct
-        hours:
-          - "00:00:00-14:00:00"
-          - "20:00:00-00:00:00"
-      winter: # November through April
-        hours:
-          - "00:00:00-05:00:00"
-          - "09:00:00-17:00:00"
-          - "21:00:00-00:00:00"
+      hours:
+        - "17:00:00-22:00:00"
+      weekdays_only: true
+    super_off_peak:
+      hours:
+        - "08:00:00-15:00:00"
+      weekdays_only: false
 
 hvac_tracker:
   class: HVACCostTracker
   module: tracker
-  estimated_wattage_kw: 2.6
+  estimated_wattage_kw: 4.1
   rates:
     summer:
-      peak: 0.25
-      off_peak: 0.10
+      peak: 0.1257
+      off_peak: 0.0995
+      super_off_peak: 0.0393
     winter:
-      peak: 0.12
-      off_peak: 0.10
+      peak: 0.1051
+      off_peak: 0.0907
+      super_off_peak: 0.0425
   schedule: *hvac_schedule
+

@@ -11,22 +11,16 @@ class HVACCostTracker(hass.Hass):
         })
         self.summer_months = range(5, 11)
 
-        # Parse On-Peak Windows from tracker config
-        self.on_peak_windows = {}
+        # Parse E-16 Windows from tracker config
         schedule_arg = self.args.get("schedule", {})
+        
         on_peak_arg = schedule_arg.get("on_peak", {})
+        self.on_peak_hours = on_peak_arg.get("hours", ["17:00:00-22:00:00"])
+        self.on_peak_weekdays_only = on_peak_arg.get("weekdays_only", True)
 
-        for season in ["summer", "winter"]:
-            season_on_peak = on_peak_arg.get(season, {})
-            hours = season_on_peak.get("hours", [])
-            if hours:
-                self.on_peak_windows[season] = hours
-
-        # Fallback to default hard-coded windows if none configured
-        if "summer" not in self.on_peak_windows:
-            self.on_peak_windows["summer"] = ["14:00:00-20:00:00"]
-        if "winter" not in self.on_peak_windows:
-            self.on_peak_windows["winter"] = ["05:00:00-09:00:00", "17:00:00-21:00:00"]
+        super_off_peak_arg = schedule_arg.get("super_off_peak", {})
+        self.super_off_peak_hours = super_off_peak_arg.get("hours", ["08:00:00-15:00:00"])
+        self.super_off_peak_weekdays_only = super_off_peak_arg.get("weekdays_only", False)
 
         # Restore daily cost from Home Assistant state if possible (persists across restarts)
         self.runtime_cost = 0.0
@@ -103,17 +97,40 @@ class HVACCostTracker(hass.Hass):
         month = now.month
         season = "summer" if month in self.summer_months else "winter"
         
-        season_rates = self.rates.get(season, {"peak": 0.25, "off_peak": 0.10} if season == "summer" else {"peak": 0.12, "off_peak": 0.10})
+        default_rates = {
+            "summer": {"peak": 0.1257, "off_peak": 0.0995, "super_off_peak": 0.0393},
+            "winter": {"peak": 0.1051, "off_peak": 0.0907, "super_off_peak": 0.0425}
+        }
+        season_rates = self.rates.get(season, default_rates[season])
 
-        if self.is_now_peak(season):
-            return float(season_rates.get("peak", 0.25 if season == "summer" else 0.12))
+        if self.is_now_peak():
+            return float(season_rates.get("peak", default_rates[season]["peak"]))
+        elif self.is_now_super_off_peak():
+            return float(season_rates.get("super_off_peak", default_rates[season]["super_off_peak"]))
         else:
-            return float(season_rates.get("off_peak", 0.10))
+            return float(season_rates.get("off_peak", default_rates[season]["off_peak"]))
 
-    def is_now_peak(self, season):
-        """Returns True if current time matches any On-Peak window"""
-        windows = self.on_peak_windows.get(season, [])
-        for window in windows:
+    def is_now_peak(self):
+        """Returns True if current time matches On-Peak window"""
+        if self.on_peak_weekdays_only:
+            weekday = self.datetime().isoweekday()
+            if weekday not in [1, 2, 3, 4, 5]:
+                return False
+
+        for window in self.on_peak_hours:
+            start, end = window.split("-")
+            if self.now_is_between(start, end):
+                return True
+        return False
+
+    def is_now_super_off_peak(self):
+        """Returns True if current time matches Super Off-Peak window"""
+        if self.super_off_peak_weekdays_only:
+            weekday = self.datetime().isoweekday()
+            if weekday not in [1, 2, 3, 4, 5]:
+                return False
+
+        for window in self.super_off_peak_hours:
             start, end = window.split("-")
             if self.now_is_between(start, end):
                 return True
