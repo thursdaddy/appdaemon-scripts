@@ -1,7 +1,3 @@
-hvac_tracker:
-  class: HVACCostTracker
-  module: tracker
-
 climate_control:
   module: hvac
   class: ClimateSchedule
@@ -11,7 +7,7 @@ climate_control:
   climate_comfort_temp: 80
   on_peak_temp: 83
   off_peak_temp: 80
-  schedule:
+  schedule: &hvac_schedule
     on_peak:
       summer: # May through Oct
         hours:
@@ -30,3 +26,16 @@ climate_control:
           - "00:00:00-05:00:00"
           - "09:00:00-17:00:00"
           - "21:00:00-00:00:00"
+
+hvac_tracker:
+  class: HVACCostTracker
+  module: tracker
+  estimated_wattage_kw: 4.8
+  rates:
+    summer:
+      peak: 0.25
+      off_peak: 0.10
+    winter:
+      peak: 0.12
+      off_peak: 0.10
+  schedule: *hvac_schedule
