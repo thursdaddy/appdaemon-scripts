@@ -50,7 +50,7 @@ class MotionSwitchPrinter(hass.Hass):
                 if payload["occupancy"] is True:
                     self.log("Event: Motion Detected")
 
-                    if self.timer_handler and self.timer_running(self.timer_handler):
+                    if self.timer_handler and self.info_timer(self.timer_handler) is not None:
                         self.debug_log("Existing timer found. Canceling.")
                         self.cancel_timer(self.timer_handler)
 

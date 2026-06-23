@@ -1,7 +1,7 @@
-import appdaemon.plugins.hass.hassapi as hass
+from base_controller import BaseController
 
 
-class SwitchControl(hass.Hass):
+class SwitchControl(BaseController):
     """
     Generic Scheduled Actions Controller
     """
@@ -14,31 +14,8 @@ class SwitchControl(hass.Hass):
             self.error("time not provided in configuration.")
             return
 
-        self.run_daily(self.execute_actions, self._time)
+        self.run_daily(self.execute_scheduled_actions, self._time)
 
-    def execute_actions(self, kwargs):
-        for act in self._actions:
-            service = act.get("service")
-            entity_id = act.get("entity_id")
-
-            if not service or not entity_id:
-                self.log(
-                    f"Invalid action config: {act}",
-                    level="WARNING",
-                )
-                continue
-
-            self.log(f"Cron executing {service} on {entity_id}")
-
-            if service == "turn_on":
-                self.turn_on(entity_id)
-            elif service == "turn_off":
-                self.turn_off(entity_id)
-            elif service == "toggle":
-                self.toggle(entity_id)
-            elif service == "set_state_on":
-                self.set_state(entity_id, state="on")
-            elif service == "set_state_off":
-                self.set_state(entity_id, state="off")
-            else:
-                self.call_service(service, entity_id=entity_id)
+    def execute_scheduled_actions(self, kwargs):
+        self.log(f"Cron scheduled execution triggered at {self._time}")
+        super().execute_actions(self._actions)

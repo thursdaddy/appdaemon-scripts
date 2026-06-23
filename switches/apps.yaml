@@ -30,13 +30,26 @@ lights_off:
     - switch.sim_desk_light
 
 switch_tv_lights:
-  class: TvLights
-  module: tv_lights
+  class: PowerControlledSwitch
+  module: power_controlled_switch
+  power_entity: sensor.living_room_tv_current_consumption
+  switch_entity: light.tv_lights
+  automation_switch: input_boolean.lights_tv_automation
+  threshold_on: 30
+  threshold_off: 25
+  delay_on: 0
+  delay_off: 30
   debug: False
 
 switch_printer_lights:
-  class: PrinterLights
-  module: printer_lights
+  class: PowerControlledSwitch
+  module: power_controlled_switch
+  power_entity: sensor.3d_printer_current_consumption
+  switch_entity: switch.printer_lights
+  threshold_on: 10
+  threshold_off: 5
+  delay_on: 5
+  delay_off: 10
 
 sleep_c137:
   class: ComputerManager

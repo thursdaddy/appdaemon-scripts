@@ -23,6 +23,7 @@ class LockDoors(hass.Hass):
         self._magnet = self.args.get("magnet")
         self._magnet_topic = f"zigbee2mqtt/{self._magnet}"
         self._jammed_or_open = f"input_boolean.{self._lock}_jammed"
+        self._location_entity = self.args.get("location_entity", "device_tracker.pixel_7_pro")
 
         self.lock_handler = None
         self.jammed_or_open_handler = None

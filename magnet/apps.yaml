@@ -1,3 +1,6 @@
 pantry_door_light:
   class: PantryLight
   module: light_pantry
+  sensor_topic: zigbee2mqtt/magnet_pantry_door
+  light_entity: light.pantry_leds
+  timeout: 300

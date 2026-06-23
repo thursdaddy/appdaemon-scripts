@@ -4,24 +4,34 @@ import appdaemon.plugins.hass.hassapi as hass
 class ClimateSchedule(hass.Hass):
     def initialize(self):
         # --- Entities & Thresholds ---
-        self.climate_entity = "climate.nest"
-        self.forecast_sensor = "sensor.weather_high_temp"
-        self.presence_entity = "device_tracker.pixel_7_pro"
-        self.manual_control_entity = "input_boolean.hvac_manual_control"
+        self.climate_entity = self.args.get("climate_entity", "climate.nest")
+        self.forecast_sensor = self.args.get("forecast_sensor", "sensor.weather_high_temp")
+        self.presence_entity = self.args.get("presence_entity", "device_tracker.pixel_7_pro")
+        self.manual_control_entity = self.args.get("manual_control_entity", "input_boolean.hvac_manual_control")
 
-        self.high_temp_threshold = 85
-        self.climate_comfort_temp = 83
-        self.on_peak_temp = 85
-        self.off_peak_temp = 80
+        self.high_temp_threshold = float(self.args.get("high_temp_threshold", 85.0))
+        self.climate_comfort_temp = float(self.args.get("climate_comfort_temp", 83.0))
+        self.on_peak_temp = float(self.args.get("on_peak_temp", 85.0))
+        self.off_peak_temp = float(self.args.get("off_peak_temp", 80.0))
 
         self._debug_mode = self.args.get("debug", False)
 
-        # --- Hard-Coded On-Peak Windows Only ---
-        # If time is NOT in these windows, it is considered Off-Peak
-        self.on_peak_windows = {
-            "summer": ["15:00:00-19:00:00"],
-            "winter": ["06:00:00-09:00:00", "18:00:00-21:00:00"],
-        }
+        # --- Parse On-Peak Windows ---
+        self.on_peak_windows = {}
+        schedule_arg = self.args.get("schedule", {})
+        on_peak_arg = schedule_arg.get("on_peak", {})
+
+        for season in ["summer", "winter"]:
+            season_on_peak = on_peak_arg.get(season, {})
+            hours = season_on_peak.get("hours", [])
+            if hours:
+                self.on_peak_windows[season] = hours
+
+        # Fallback to default hard-coded windows if none configured
+        if "summer" not in self.on_peak_windows:
+            self.on_peak_windows["summer"] = ["15:00:00-19:00:00"]
+        if "winter" not in self.on_peak_windows:
+            self.on_peak_windows["winter"] = ["06:00:00-09:00:00", "18:00:00-21:00:00"]
 
         # --- Configuration Output ---
         self.log("============================")
@@ -29,6 +39,8 @@ class ClimateSchedule(hass.Hass):
         self.log(f"  Comfort Temp:  {self.climate_comfort_temp}F")
         self.log(f"  Peak Temp:     {self.on_peak_temp}F")
         self.log(f"  Off-Peak Temp: {self.off_peak_temp}F")
+        self.log(f"  Summer Peak:   {self.on_peak_windows['summer']}")
+        self.log(f"  Winter Peak:   {self.on_peak_windows['winter']}")
         self.log(f"  Debug Mode:    {'ENABLED' if self._debug_mode else 'DISABLED'}")
         self.log("===        CONFIG        ===")
 

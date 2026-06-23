@@ -1,14 +1,23 @@
-import hassapi as hass
+from base_controller import BaseController
 
 
-class PicoEvent(hass.Hass):
+class PicoEvent(BaseController):
     """
     Generic Lutron Pico Remote Controller
     """
 
     def initialize(self):
         self._device_name = self.args.get("device_name")
-        self._actions = self.args.get("actions", {})
+        raw_actions = self.args.get("actions", {})
+
+        # Normalize keys to strings to handle YAML parsing of on/off/yes/no as booleans
+        self._actions = {}
+        for key, val in raw_actions.items():
+            if isinstance(key, bool):
+                str_key = "on" if key else "off"
+            else:
+                str_key = str(key).lower()
+            self._actions[str_key] = val
 
         if not self._device_name:
             self.error("device_name not provided in configuration.")
@@ -31,37 +40,9 @@ class PicoEvent(hass.Hass):
             self.execute_actions(button_type)
 
     def execute_actions(self, button_type):
-        if button_type in self._actions:
-            actions = self._actions[button_type]
-            if not isinstance(actions, list):
-                actions = [actions]
-
-            for act in actions:
-                service = act.get("service")
-                entity_id = act.get("entity_id")
-
-                if not service or not entity_id:
-                    self.log(
-                        f"Invalid action config for {button_type}: {act}",
-                        level="WARNING",
-                    )
-                    continue
-
-                self.log(
-                    f"Executing {service} on {entity_id} for button {button_type}"
-                )
-
-                if service == "turn_on":
-                    self.turn_on(entity_id)
-                elif service == "turn_off":
-                    self.turn_off(entity_id)
-                elif service == "toggle":
-                    self.toggle(entity_id)
-                elif service == "set_state_on":
-                    self.set_state(entity_id, state="on")
-                elif service == "set_state_off":
-                    self.set_state(entity_id, state="off")
-                else:
-                    self.call_service(service, entity_id=entity_id)
+        normalized_button = str(button_type).lower()
+        if normalized_button in self._actions:
+            self.log(f"Pico remote button pressed: {normalized_button}")
+            super().execute_actions(self._actions[normalized_button])
         else:
-            self.log(f"No actions defined for button_type: {button_type}")
+            self.log(f"No actions defined for button_type: {normalized_button}")
