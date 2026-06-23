@@ -25,6 +25,16 @@ class MotionLights(hass.Hass):
 
         self.timer_handler = None
 
+        # Collect all lights managed by this automation across all schedules
+        self._all_managed_lights = set()
+        if self._lights:
+            self._all_managed_lights.update(self._lights)
+        if self._schedule:
+            for config in self._schedule.values():
+                sched_lights = config.get("lights")
+                if sched_lights:
+                    self._all_managed_lights.update(sched_lights)
+
         if not self._motion_sensor:
             self.log(
                 f"[ERR] Set a light or scene to use with \
@@ -110,6 +120,6 @@ class MotionLights(hass.Hass):
                 )
 
     def turn_off_lights(self, kwargs):
-        for light in self.config["lights"]:
+        for light in self._all_managed_lights:
             self.log(f"Turning off light: {light}")
             self.turn_off(light)
