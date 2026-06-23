@@ -90,10 +90,11 @@ class MotionLights(hass.Hass):
         return value_adjusted
 
     def state_and_config_values(self, state_all, light):
-        brightness = state_all["attributes"]["brightness"]
-        # config_brightness = self.config["brightness_adjusted"]
-        if self.config["brightness_adjusted"] == brightness:
+        attributes = state_all.get("attributes", {})
+        brightness = attributes.get("brightness")
+        if self.config.get("brightness_adjusted") == brightness:
             return True
+        return False
 
     def turn_on_lights(self):
         for light in self.config["lights"]:

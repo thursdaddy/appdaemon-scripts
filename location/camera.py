@@ -23,7 +23,8 @@ class CameraLockControl(hass.Hass):
 
         # person detection
         self.listen_state(self.home_callback, self._location_entity)
-        self.listen_state(self.home_callback, self._wifi_entity)
+        if self._wifi_entity:
+            self.listen_state(self.home_callback, self._wifi_entity)
         self.listen_state(self.camera_callback, self._camera)
 
     def home_callback(self, entity, attribute, old, new, kwargs):
@@ -65,8 +66,10 @@ class CameraLockControl(hass.Hass):
 
     def _is_home_condition_met(self) -> bool:
         location_home = self.get_state(self._location_entity) == "home"
-        wifi_connected = self.get_state(self._wifi_entity) == "connected"
-        return location_home or wifi_connected
+        if self._wifi_entity:
+            wifi_connected = self.get_state(self._wifi_entity) == "connected"
+            return location_home or wifi_connected
+        return location_home
 
     def check_unlock_conditions(self):
         self.log("Checking unlock conditions...")

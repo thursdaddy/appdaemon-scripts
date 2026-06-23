@@ -51,7 +51,7 @@ class BooleanControlMotion(hass.Hass):
             self.turn_off(switch)
 
 
-class BooleanComputer(hass.Hass):
+class ComputerManager(hass.Hass):
 
     def initialize(self):
         self._boolean = self.args.get("boolean")
