@@ -74,16 +74,17 @@ class CameraLockControl(hass.Hass):
             self.log("Unlocking via Cameras")
             self.unlock_door()
         else:
-            self.log("Not unlocking, detected away..")
+            self.log("Not unlocking, conditions not met.")
 
     def unlock_door(self):
         self.log("Unlocking door...")
         if self._home_window_timer:
             self.cancel_timer(self._home_window_timer)
-            self.mqtt_api.mqtt_publish(
-                topic=f"{self._lock_topic}/set",
-                payload="UNLOCK",
-            )
+        self.mqtt_api.mqtt_publish(
+            topic=f"{self._lock_topic}/set",
+            payload="UNLOCK",
+        )
+
     def lock_door(self):
         lock_state = self.hass_api.get_state(self._lock)
         if lock_state == "unlocked":
