@@ -20,6 +20,7 @@ class CameraLockControl(hass.Hass):
         # home detection flags
         self._home_window_timer = None
         self._home_window_active = False
+        self._last_camera_trigger = None
 
         # person detection
         self.listen_state(self.home_callback, self._location_entity)
@@ -46,6 +47,19 @@ class CameraLockControl(hass.Hass):
             self.log("Home Location Detected")
             self._home_window_active = True
             self._home_window_timer = self.run_in(self.end_home_window, 300)
+
+            # Check if camera is currently active or was recently triggered
+            camera_state = self.get_state(self._camera)
+            recently_triggered = False
+            if self._last_camera_trigger:
+                time_diff = (self.datetime() - self._last_camera_trigger).total_seconds()
+                if time_diff < 90:
+                    recently_triggered = True
+
+            if camera_state == "on" or recently_triggered:
+                self.log(f"Camera was active (state: {camera_state}, recent: {recently_triggered}). Unlocking immediately.")
+                self.unlock_door()
+
         elif not self._is_home_condition_met() and (old == "home" or self._home_window_active):
             self.log("Detected Away, Locking Door.")
             self._home_window_active = False
@@ -62,6 +76,7 @@ class CameraLockControl(hass.Hass):
     def person_detected(self, entity, attribute, old, new, kwargs):
         if new == "on":
             self.log("Person Detected")
+            self._last_camera_trigger = self.datetime()
             self.check_unlock_conditions()
 
     def _is_home_condition_met(self) -> bool:
