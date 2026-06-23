@@ -3,7 +3,7 @@ import json
 import hassapi as hass
 
 
-class WelcomeHome(hass.Hass):
+class LocationChange(hass.Hass):
     def initialize(self):
         # Configuration
         self._location_entity = "device_tracker.pixel_7_pro"
@@ -32,6 +32,10 @@ class WelcomeHome(hass.Hass):
         self.listen_state(self.location_update, self._location_entity)
         self.mqtt_api = self.get_plugin_api("MQTT")
 
+        # Listen for door sensors permanently
+        for door in self._doors:
+            self.mqtt_api.listen_event(self.magnet_callback, "MQTT_MESSAGE", topic=door)
+
     def debug_log(self, message):
         if self._debug_mode:
             self.log(f"[DEBUG] {message}")
@@ -44,8 +48,7 @@ class WelcomeHome(hass.Hass):
             if self._active_config:
                 self._home_window_active = True
                 self.run_in(self.end_home_window, 300)
-                self.listen_for_doors()
-
+                
                 self.call_service(
                     "notify/gotify",
                     title="HOME",
@@ -53,12 +56,8 @@ class WelcomeHome(hass.Hass):
                 )
             else:
                 self.debug_log(
-                    "Arrived home, but no active schedule found. Skipping door listen."
+                    "Arrived home, but no active schedule found. Skipping welcome window."
                 )
-
-    def listen_for_doors(self):
-        for door in self._doors:
-            self.mqtt_api.listen_event(self.magnet_callback, "MQTT_MESSAGE", topic=door)
 
     def magnet_callback(self, event_name, data, kwargs):
         if not self._home_window_active:
