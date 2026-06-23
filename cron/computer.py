@@ -7,39 +7,46 @@ import requests
 class ComputerStateMonitor(hass.Hass):
 
     def initialize(self):
-        self.run_every(self.check_computer, "now+1", 60)  # Run every minute
         self._ip = self.args.get("ip")
         self._boolean = self.args.get("boolean")
+        self._threshold = 2
+        self._count = 0
+        self._last_detected_state = None
+
+        self.run_every(self.check_computer, "now", 20)
+        self.log(f"Monitor started. Target: {self._ip}, Boolean: {self._boolean}")
 
     def check_computer(self, kwargs):
+        current_real_state = None
+
         try:
-            response = requests.get(f"http://127.0.0.1:8009/state/ip/{self._ip}")
-            response.raise_for_status()
-            xml_string = response.text
-            root = ET.fromstring(xml_string)
-            computer_state = root.find("state").text
-            input_boolean = self._boolean
+            # Replaced 127.0.0.1 with self._ip for flexibility
+            response = requests.get(f"http://{self._ip}:8009/state/local", timeout=5)
+            root = ET.fromstring(response.text)
+            state_text = root.find("state").text
+            current_real_state = "on" if state_text == "online" else "off"
+        except Exception:
+            current_real_state = "off"
 
-            if computer_state == "offline":
-                if self.get_state(input_boolean) == "on":
-                    self.turn_off(input_boolean)
-                    self.log(f"Computer offline, turned off {input_boolean}")
-            elif computer_state == "online":
-                if self.get_state(input_boolean) == "off":
-                    self.turn_on(input_boolean)
-                    self.log(f"Computer online, turned on {input_boolean}")
-            else:
-                self.log(f"Unexpected computer state: {computer_state}")
+        self.process_state_logic(current_real_state)
 
-        except requests.exceptions.RequestException as e:
-            self.log(f"Error checking computer: {e}", level="ERROR")
-        except ET.ParseError as e:
-            self.log(
-                f"Error parsing XML: {e}, XML: {xml_string if 'xml_string' in locals() else 'No XML'}",
-                level="ERROR",
-            )
-        except AttributeError as e:
-            self.log(
-                f"Error accessing XML element: {e}, XML: {xml_string if 'xml_string' in locals() else 'No XML'}",
-                level="ERROR",
-            )
+    def process_state_logic(self, detected_state):
+        if detected_state == self._last_detected_state:
+            self._count += 1
+        else:
+            # Only log the "Observation" if it's different from the last time
+            self.log(f"Observation: PC looks {detected_state.upper()}. Verifying...")
+            self._count = 1
+            self._last_detected_state = detected_state
+
+        if self._count >= self._threshold:
+            current_ha_state = self.get_state(self._boolean)
+
+            # Update HA only if there is a mismatch
+            if detected_state == "on" and current_ha_state == "off":
+                self.log(f"Confidence High: PC is ONLINE. Syncing {self._boolean} to ON.")
+                self.turn_on(self._boolean)
+
+            elif detected_state == "off" and current_ha_state == "on":
+                self.log(f"Confidence High: PC is OFFLINE. Syncing {self._boolean} to OFF.")
+                self.turn_off(self._boolean)

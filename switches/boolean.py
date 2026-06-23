@@ -73,7 +73,7 @@ class BooleanComputer(hass.Hass):
         try:
             response = requests.get(f"http://{self._host}:8009/sleep")
             response.raise_for_status()
-            self.log(f"Sleep command sent successfully. Response: {response.text}")
+            self.log(f"Sleep command sent successfully. Response: {response.text}", level="DEBUG")
 
             self.run_in(self.check_state_and_resend_sleep, 20)
 
@@ -81,7 +81,7 @@ class BooleanComputer(hass.Hass):
             self.log(f"Error sending Sleep command: {e}", level="ERROR")
 
     def check_state_and_resend_sleep(self, kwargs):
-        self.log("checking status")
+        self.log("checking status", level="DEBUG")
         try:
             state_response = requests.get(
                 f"http://{self._host}:8009/state/local", timeout=5
@@ -90,20 +90,20 @@ class BooleanComputer(hass.Hass):
 
             if "<state>online</state>" in state_response.text:
                 if self._sleep_retry_count < 3:
-                    self.log("Still online after sleep. Rerunning sleep command.")
+                    self.log("Still online after sleep. Rerunning sleep command.", level="DEBUG")
                     self._sleep_retry_count += 1
                     self.sleep_on_lan()
                 else:
-                    self.log("Still online after sleep. Retry limit reached.")
+                    self.log("Still online after sleep. Retry limit reached.", level="WARNING")
 
             else:
-                self.log("c137 is offline after sleep. Sleep successful.")
+                self.log(f"{self._host} is offline after sleep. Sleep successful.", level="DEBUG")
 
         except requests.exceptions.ConnectionError as connection_error:
             if "Failed to establish a new connection" in str(
                 connection_error
             ) or "timed out" in str(connection_error):
-                self.log("c137 is offline after sleep. Sleep successful.")
+                self.log(f"{self._host} is offline after sleep. Sleep successful.", level="DEBUG")
             else:
                 self.log(f"Connection error: {connection_error}", level="WARNING")
 

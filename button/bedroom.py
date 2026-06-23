@@ -1,7 +1,6 @@
 import json
 
 import hassapi as hass
-import requests
 
 
 class ButtonPress(hass.Hass):
@@ -14,8 +13,23 @@ class ButtonPress(hass.Hass):
         Button: Aqara Button
         """
         # Set in apps.yml
-        self._topic = "zigbee2mqtt/button_bedroom"
-        self.timer_handler = None
+        self._topic = self.args.get("topic", "zigbee2mqtt/button_bedroom")
+        self._debug_mode = self.args.get("debug", False)
+
+        # Mapping actions to entities for cleaner logging and logic
+        self._actions = {
+            "single": "input_boolean.lights_all",
+            "double": "input_boolean.motion_all",
+            "hold": "input_boolean.computer_c137",
+        }
+
+        # --- Configuration Output (Readable Top-Down) ---
+        self.log("============================")
+        for action, entity in self._actions.items():
+            self.log(f"  {action.capitalize() + ':':<10} Turn off -> {entity}")
+        self.log(f"  Topic:         {self._topic}")
+        self.log(f"  Debug Mode:    {'ENABLED' if self._debug_mode else 'DISABLED'}")
+        self.log("=== Configuration Loaded ===")
 
         self._mqtt = self.get_plugin_api("MQTT")
         self._mqtt.listen_event(
@@ -24,26 +38,46 @@ class ButtonPress(hass.Hass):
             topic=self._topic,
         )
 
+    def debug_log(self, message):
+        """Helper to only log if debug is enabled in apps.yaml"""
+        if self._debug_mode:
+            self.log(f"[DEBUG] {message}")
+
     def callback(self, event_name, data, kwargs):
+        self.debug_log(f"Received MQTT data: {data}")
+
         try:
+            # json is assumed to be available globally
             payload = json.loads(data["payload"])
-            if payload["action"] == "single":
+            action = payload.get("action")
+
+            if not action:
+                self.debug_log("No 'action' key found in payload.")
+                return
+
+            if action == "single":
                 self.press_single()
-            if payload["action"] == "double":
+            elif action == "double":
                 self.press_double()
-            if payload["action"] == "hold":
+            elif action == "hold":
                 self.press_hold()
-        except json.JSONDecodeError:
-            return
+            else:
+                self.debug_log(f"Unhandled action received: {action}")
+
+        except Exception as e:
+            self.log(f"[ERR] Failed to parse payload: {e}")
 
     def press_single(self):
-        self.log(f"{self._topic} -> Turn off All Lights")
-        self.turn_off("input_boolean.lights_all")
+        entity = self._actions["single"]
+        self.log(f"Button Action: Single -> Turning off {entity}")
+        self.turn_off(entity)
 
     def press_double(self):
-        self.log(f"{self._topic} -> Turn off Motion Automations")
-        self.turn_off("input_boolean.motion_all")
+        entity = self._actions["double"]
+        self.log(f"Button Action: Double -> Turning off {entity}")
+        self.turn_off(entity)
 
     def press_hold(self):
-        self.log(f"{self._topic} -> Sleep c137")
-        self.turn_off("input_boolean.computer_c137")
+        entity = self._actions["hold"]
+        self.log(f"Button Action: Hold -> Turning off {entity}")
+        self.turn_off(entity)

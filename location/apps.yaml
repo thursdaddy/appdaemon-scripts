@@ -1,14 +1,20 @@
+away_mode:
+  class: AwayMode
+  module: away
+
 back_door_camera:
   class: CameraLockControl
-  module: locks
+  module: camera
   lock: lock_back_door
   camera: binary_sensor.back_door_person_detected
+  wifi_sensor: sensor.pixel_7_pro_wi_fi_connection
 
 front_door_camera:
   class: CameraLockControl
-  module: locks
+  module: camera
   lock: lock_front_door
   camera: binary_sensor.g4_doorbell_person_detected
+  wifi_sensor: sensor.pixel_7_pro_wi_fi_connection
 
 home_detection:
   class: LocationChange

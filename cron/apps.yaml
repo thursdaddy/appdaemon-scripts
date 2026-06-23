@@ -1,10 +1,20 @@
 daily_espresso_off:
   class: SwitchControl
-  module: espresso
+  module: switch_control
+  time: "12:00:00"
+  actions:
+    - service: turn_off
+      entity_id: switch.kitchen_espresso
 
 daily_motion_on:
   class: SwitchControl
-  module: enable_motion
+  module: switch_control
+  time: "04:00:00"
+  actions:
+    - service: turn_off
+      entity_id: input_boolean.motion_all
+    - service: turn_on
+      entity_id: input_boolean.motion_all
 
 monitor_state_c137:
   class: ComputerStateMonitor

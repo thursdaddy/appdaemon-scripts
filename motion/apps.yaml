@@ -138,6 +138,15 @@ printer_motion:
       lights:
         - light.printer_lower
 
+printer_motion_switch_light:
+  class: MotionSwitchPrinter
+  module: printer_switch
+  motion_sensor: zigbee2mqtt/motion_printer
+  delay: 30
+  debug: False
+  switches:
+    - switch.printer_lights
+
 sim_motion_light:
   class: MotionSwitch
   module: switches
@@ -148,7 +157,7 @@ sim_motion_light:
     day:
       start: sunrise
       end: "23:00:00"
-      delay: 300
+      delay: 900
     night:
       start: "23:00:01"
       end: "sunrise - 00:00:01"

@@ -38,6 +38,9 @@ class MotionSwitch(hass.Hass):
                 if self.info_timer(self.timer_handler) is not None:
                     self.cancel_timer(self.timer_handler)
 
+                if self._schedule is None:
+                    self.turn_on_switches()
+
                 if self.is_scheduled():
                     self.turn_on_switches()
                 else:

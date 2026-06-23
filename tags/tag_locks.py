@@ -10,7 +10,6 @@ class UnlockDoor(hass.Hass):
 
     def initialize(self):
         self.hass_api = self.get_plugin_api("HASS")
-        self.mqtt_api = self.get_plugin_api("MQTT")
 
         self._tag = self.args.get("tag")
         self._lock = self.args.get("lock")
@@ -19,7 +18,7 @@ class UnlockDoor(hass.Hass):
         self._entity = self.get_entity(self._tag)
         self.handle = self._entity.listen_state(self.tag_callback)
 
-    def tag_callback(self, entity, attribute, old, new, kwargs):
+    def tag_callback(self, data, events, *kwargs):
         try:
             self.log(data)
             self.log(self._lock_topic)

@@ -41,6 +41,12 @@ class MotionRGBLight(hass.Hass):
         try:
             payload = json.loads(data["payload"])
             self.config = self.get_config()
+            if self.config is None:
+                self.log(
+                    "[WARN] No active schedule found, not processing motion event."
+                )
+                return
+
             if "occupancy" in payload and payload["occupancy"] is True:
                 self.log("Motion Detected!")
 

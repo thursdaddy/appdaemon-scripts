@@ -26,29 +26,34 @@ lights_off:
     - light.kitchen_main_lights
     - light.kitchen_under_cabinet
     - light.kitchen_above_cabinet
-    - switch.living_room_tv_lights
+    - light.tv_lights
     - switch.sim_desk_light
 
 switch_tv_lights:
   class: TvLights
   module: tv_lights
+  debug: False
+
+switch_printer_lights:
+  class: PrinterLights
+  module: printer_lights
 
 sleep_c137:
-  class: BooleanComputer
+  class: ComputerManager
   module: boolean
   boolean: input_boolean.computer_c137
   host: 192.168.10.137
   mac: 9c:5c:8e:bc:1e:46
 
 sleep_sim:
-  class: BooleanComputer
+  class: ComputerManager
   module: boolean
   boolean: input_boolean.computer_sim
   host: 192.168.10.116
   mac: 9c:6b:00:14:ac:a5
 
 sleep_gamer:
-  class: BooleanComputer
+  class: ComputerManager
   module: boolean
   boolean: input_boolean.computer_gamer
   host: 192.168.10.169

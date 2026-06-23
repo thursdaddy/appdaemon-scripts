@@ -1,4 +1,14 @@
 bedroom_button:
   class: ButtonPress
-  module: bedroom
+  module: button_controller
   topic: zigbee2mqtt/button_bedroom
+  actions:
+    single:
+      - service: turn_off
+        entity_id: input_boolean.lights_all
+    double:
+      - service: turn_off
+        entity_id: input_boolean.motion_all
+    hold:
+      - service: turn_off
+        entity_id: input_boolean.computer_c137

@@ -33,7 +33,8 @@ class HVACCostTracker(hass.Hass):
                 cost = self.calculate_cost(runtime_difference)
                 self.runtime_cost = cost
                 self.log(
-                    f"AC runtime increased by {runtime_difference:.3f} hours. Cost: ${cost:.3f}."
+                    f"AC runtime increased by {runtime_difference:.3f} hours. Cost: ${cost:.3f}.",
+                    level="DEBUG"
                 )
                 self.update_cost_sensors()
             elif new_runtime < old_runtime:
@@ -50,7 +51,6 @@ class HVACCostTracker(hass.Hass):
         energy_used_kwh = self.estimated_wattage_kw * runtime_difference
         rate = self.get_current_rate()
         cost = energy_used_kwh * rate
-        self.log(cost)
         return cost
 
     def get_current_rate(self):
