@@ -67,8 +67,8 @@ office_motion:
   lights:
     - light.office_desk
   lux_sensor: sensor.motion_office_illuminance
-  lux_min: 10
-  lux_max: 60
+  lux_min: 50
+  lux_max: 250
   lux_min_brightness: 10
   schedule:
     day:

@@ -152,14 +152,14 @@ class MotionRGBLight(hass.Hass):
                 lux_state = self.get_state(self._lux_sensor)
                 if lux_state not in [None, "unavailable", "unknown"]:
                     current_lux = float(lux_state)
-                    self.debug_log(f"Current lux: {current_lux} lx (Min: {self._lux_min}, Max: {self._lux_max})")
+                    self.log(f"Current lux: {current_lux} lx (Min: {self._lux_min}, Max: {self._lux_max})")
                     
                     if current_lux >= self._lux_max:
-                        self.debug_log(f"Ambient lux {current_lux} is at/above max threshold {self._lux_max}. Skipping light activation.")
+                        self.log(f"Ambient lux {current_lux} is at/above max threshold {self._lux_max}. Skipping light activation.")
                         return
                     elif current_lux <= self._lux_min:
                         brightness_percent = self.config["brightness"]
-                        self.debug_log(f"Ambient lux {current_lux} is at/below min threshold {self._lux_min}. Using full brightness: {brightness_percent}%.")
+                        self.log(f"Ambient lux {current_lux} is at/below min threshold {self._lux_min}. Using full brightness: {brightness_percent}%.")
                     else:
                         min_b = self._lux_min_brightness
                         max_b = self.config["brightness"]
@@ -168,7 +168,7 @@ class MotionRGBLight(hass.Hass):
                             ratio = (current_lux - self._lux_min) / (self._lux_max - self._lux_min)
                             brightness_percent = max_b - (ratio * (max_b - min_b))
                             brightness_percent = max(min_b, min(max_b, brightness_percent))
-                            self.debug_log(f"Scaled brightness to {brightness_percent:.1f}% based on lux {current_lux}.")
+                            self.log(f"Scaled brightness to {brightness_percent:.1f}% based on lux {current_lux}.")
                         else:
                             brightness_percent = max_b
             except (ValueError, TypeError) as e:
