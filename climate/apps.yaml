@@ -30,7 +30,7 @@ climate_control:
 hvac_tracker:
   class: HVACCostTracker
   module: tracker
-  estimated_wattage_kw: 4.8
+  estimated_wattage_kw: 2.6
   rates:
     summer:
       peak: 0.25
