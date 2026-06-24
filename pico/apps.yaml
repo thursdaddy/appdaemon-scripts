@@ -11,7 +11,9 @@ office_pico:
         entity_id: light.office_desk
     lower:
       - service: turn_off
-        entity_id: input_boolean.computer_c137
+        entity_id: light.office_desk
+      - service: turn_off
+        entity_id: input_boolean.motion_office
     stop:
       - service: toggle
         entity_id: input_boolean.motion_office
