@@ -29,7 +29,7 @@ series:
     yaxis_id: runtime
     fill_raw: last
     extend_to: now
-  - entity: sensor.hvac_monthly_cost
+  - entity: sensor.cooling_cost_monthly
     name: Monthly Cost
     show:
       in_header: true
