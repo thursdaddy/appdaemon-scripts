@@ -8,6 +8,7 @@ back_door_camera:
   lock: lock_back_door
   camera: binary_sensor.back_door_person_detected
   wifi_sensor: sensor.pixel_7_pro_wi_fi_connection
+  magnet: magnet_back_door
 
 front_door_camera:
   class: CameraLockControl
@@ -15,6 +16,7 @@ front_door_camera:
   lock: lock_front_door
   camera: binary_sensor.g4_doorbell_person_detected
   wifi_sensor: sensor.pixel_7_pro_wi_fi_connection
+  magnet: magnet_front_door
 
 home_detection:
   class: LocationChange
