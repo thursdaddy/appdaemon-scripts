@@ -96,6 +96,13 @@ This repository contains Python-based Home Assistant automations managed through
 *   **Pantry Door Magnet (`PantryLight`)**:
     *   Magnet: `magnet_pantry_door`. Light: `light.pantry_leds`.
     *   Turns on pantry lights when opened; shuts off automatically after a `5-minute` timeout (300s).
+*   **SIM Room Motion Controllers (`MotionSwitch`)**:
+    *   **Desk Light (`sim_motion_light`)**:
+        *   Sensor: `motion_sim`. Switch: `switch.sim_desk_light`.
+        *   Delays: `15 minutes` (900s) during the day (`sunrise` to `23:00`), `30 seconds` at night (`23:00:01` to `sunrise`).
+    *   **Espresso Machine (`sim_motion_espresso`)**:
+        *   Sensor: `motion_sim`. Switch: `switch.kitchen_espresso`.
+        *   Schedule: Active **only** in the morning between `sunrise` and **`11:00:00` AM** (automatically starts warming up the kitchen espresso machine when morning motion is detected in the SIM room).
 
 ---
 

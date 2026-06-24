@@ -15,6 +15,9 @@ class MotionSwitch(hass.Hass):
         self._schedule = self.args.get("schedule", None)
         self._delay = self.args.get("delay", None)
         self._debug_mode = self.args.get("debug", False)
+        self.motion_control = self._motion_sensor.replace(
+            "zigbee2mqtt/", "input_boolean."
+        )
 
         self.timer_handler = None
 
@@ -43,6 +46,10 @@ class MotionSwitch(hass.Hass):
             self.log(f"[DEBUG] {message}")
 
     def mqtt_callback(self, event_name, data, kwargs):
+        motion_control = self.get_state(self.motion_control)
+        if motion_control == "off":
+            self.debug_log("Motion Disabled, bye.")
+            return
         try:
             payload = json.loads(data["payload"])
             self.debug_log(f"Incoming MQTT message: {payload}")
