@@ -5,7 +5,8 @@
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   };
 
-  outputs = { self, nixpkgs }:
+  outputs =
+    { self, nixpkgs }:
     let
       supportedSystems = [
         "x86_64-linux"
@@ -17,13 +18,16 @@
       nixpkgsFor = forAllSystems (system: import nixpkgs { inherit system; });
     in
     {
-      devShells = forAllSystems (system:
+      devShells = forAllSystems (
+        system:
         let
           pkgs = nixpkgsFor.${system};
-          pythonEnv = pkgs.python3.withPackages (ps: with ps; [
-            appdaemon
-            requests
-          ]);
+          pythonEnv = pkgs.python3.withPackages (
+            ps: [
+              (ps.toPythonModule pkgs.appdaemon)
+              ps.requests
+            ]
+          );
         in
         {
           default = pkgs.mkShell {
@@ -34,12 +38,13 @@
 
             shellHook = ''
               echo "============================================="
-              echo "🛡️ AppDaemon Development Environment Loaded 🛡️"
+              echo "AppDaemon Development Environment Loaded"
               echo "Python version: $(python3 --version)"
               echo "Available modules: appdaemon, requests"
               echo "============================================="
             '';
           };
-        });
+        }
+      );
     };
 }
