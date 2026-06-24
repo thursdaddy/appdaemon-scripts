@@ -18,7 +18,7 @@ series:
     float_precision: 2
     unit: '$'
     yaxis_id: cost
-    group: cost
+    stack_group: cost
     fill_raw: last
     extend_to: now
   - entity: sensor.hvac_cost_off_peak
@@ -31,7 +31,7 @@ series:
     float_precision: 2
     unit: '$'
     yaxis_id: cost
-    group: cost
+    stack_group: cost
     fill_raw: last
     extend_to: now
   - entity: sensor.hvac_cost_super_off_peak
@@ -44,7 +44,7 @@ series:
     float_precision: 2
     unit: '$'
     yaxis_id: cost
-    group: cost
+    stack_group: cost
     fill_raw: last
     extend_to: now
 
@@ -58,7 +58,7 @@ series:
     float_precision: 2
     unit: 'h'
     yaxis_id: runtime
-    group: runtime
+    stack_group: runtime
     fill_raw: last
     extend_to: now
   - entity: sensor.hvac_cooling_off_peak
@@ -70,7 +70,7 @@ series:
     float_precision: 2
     unit: 'h'
     yaxis_id: runtime
-    group: runtime
+    stack_group: runtime
     fill_raw: last
     extend_to: now
   - entity: sensor.hvac_cooling_super_off_peak
@@ -82,7 +82,7 @@ series:
     float_precision: 2
     unit: 'h'
     yaxis_id: runtime
-    group: runtime
+    stack_group: runtime
     fill_raw: last
     extend_to: now
 
