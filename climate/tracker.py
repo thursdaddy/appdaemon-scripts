@@ -22,15 +22,11 @@ class HVACCostTracker(hass.Hass):
         self.super_off_peak_hours = super_off_peak_arg.get("hours", ["08:00:00-15:00:00"])
         self.super_off_peak_weekdays_only = super_off_peak_arg.get("weekdays_only", False)
 
-        # Restore daily cost from Home Assistant state if possible (persists across restarts)
-        self.runtime_cost = 0.0
-        current_cost_state = self.get_state("sensor.hvac_cost_tracker")
-        try:
-            if current_cost_state not in [None, "unavailable", "unknown"]:
-                self.runtime_cost = float(current_cost_state)
-                self.log(f"Restored daily cost from sensor.hvac_cost_tracker: ${self.runtime_cost:.3f}")
-        except ValueError:
-            self.log(f"Could not restore daily cost from sensor.hvac_cost_tracker (state: {current_cost_state}). Starting at $0.00.")
+        # Restore daily costs and sub-tier costs from Home Assistant state
+        self.runtime_cost = self.restore_cost_sensor("sensor.hvac_cost_tracker")
+        self.peak_cost = self.restore_cost_sensor("sensor.hvac_cost_peak")
+        self.off_peak_cost = self.restore_cost_sensor("sensor.hvac_cost_off_peak")
+        self.super_off_peak_cost = self.restore_cost_sensor("sensor.hvac_cost_super_off_peak")
 
         # Restore previous runtime to compare against
         self.previous_runtime = None
@@ -49,6 +45,17 @@ class HVACCostTracker(hass.Hass):
         
         # Ensure sensors are updated on startup
         self.update_cost_sensors()
+
+    def restore_cost_sensor(self, entity_id):
+        current_state = self.get_state(entity_id)
+        try:
+            if current_state not in [None, "unavailable", "unknown"]:
+                val = float(current_state)
+                self.log(f"Restored daily cost from {entity_id}: ${val:.3f}")
+                return val
+        except ValueError:
+            self.log(f"Could not restore daily cost from {entity_id} (state: {current_state}). Starting at $0.00.")
+        return 0.0
 
     def cooling_runtime_change(self, entity, attribute, old, new, kwargs):
         try:
@@ -69,6 +76,15 @@ class HVACCostTracker(hass.Hass):
             if runtime_difference > 0:
                 cost_slice = self.calculate_cost(runtime_difference)
                 self.runtime_cost += cost_slice
+                
+                # Accrue cost slice to the active tariff tier
+                if self.is_now_peak():
+                    self.peak_cost += cost_slice
+                elif self.is_now_super_off_peak():
+                    self.super_off_peak_cost += cost_slice
+                else:
+                    self.off_peak_cost += cost_slice
+
                 self.log(
                     f"AC runtime increased by {runtime_difference:.3f} hours (slice cost: ${cost_slice:.3f}). Daily Cost: ${self.runtime_cost:.3f}.",
                     level="DEBUG"
@@ -151,10 +167,40 @@ class HVACCostTracker(hass.Hass):
                 "icon": "mdi:currency-usd",
             },
         )
+        self.set_state(
+            "sensor.hvac_cost_peak",
+            state=f"{self.peak_cost:.3f}",
+            attributes={
+                "friendly_name": "AC Daily Peak Cost",
+                "unit_of_measurement": "$",
+                "icon": "mdi:currency-usd",
+            },
+        )
+        self.set_state(
+            "sensor.hvac_cost_off_peak",
+            state=f"{self.off_peak_cost:.3f}",
+            attributes={
+                "friendly_name": "AC Daily Off-Peak Cost",
+                "unit_of_measurement": "$",
+                "icon": "mdi:currency-usd",
+            },
+        )
+        self.set_state(
+            "sensor.hvac_cost_super_off_peak",
+            state=f"{self.super_off_peak_cost:.3f}",
+            attributes={
+                "friendly_name": "AC Daily Super Off-Peak Cost",
+                "unit_of_measurement": "$",
+                "icon": "mdi:currency-usd",
+            },
+        )
 
     def reset_runtime_cost(self, kwargs):
         """Resets the daily cost at a specific time after midnight."""
         self.runtime_cost = 0.0
+        self.peak_cost = 0.0
+        self.off_peak_cost = 0.0
+        self.super_off_peak_cost = 0.0
         self.previous_runtime = 0.0
         self.log("Daily AC cost reset to $0.00.")
         self.update_cost_sensors()
