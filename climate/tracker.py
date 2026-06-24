@@ -166,6 +166,7 @@ class HVACCostTracker(hass.Hass):
                 "friendly_name": "AC Session Running Cost",
                 "unit_of_measurement": "$",
                 "icon": "mdi:currency-usd",
+                "state_class": "total_increasing",
             },
         )
         self.set_state(
@@ -175,6 +176,7 @@ class HVACCostTracker(hass.Hass):
                 "friendly_name": "AC Session Peak Cost",
                 "unit_of_measurement": "$",
                 "icon": "mdi:currency-usd",
+                "state_class": "total_increasing",
             },
         )
         self.set_state(
@@ -184,6 +186,7 @@ class HVACCostTracker(hass.Hass):
                 "friendly_name": "AC Session Off-Peak Cost",
                 "unit_of_measurement": "$",
                 "icon": "mdi:currency-usd",
+                "state_class": "total_increasing",
             },
         )
         self.set_state(
@@ -193,6 +196,7 @@ class HVACCostTracker(hass.Hass):
                 "friendly_name": "AC Session Super Off-Peak Cost",
                 "unit_of_measurement": "$",
                 "icon": "mdi:currency-usd",
+                "state_class": "total_increasing",
             },
         )
         self.set_state(
@@ -202,6 +206,7 @@ class HVACCostTracker(hass.Hass):
                 "friendly_name": "AC Session Peak Runtime",
                 "unit_of_measurement": "h",
                 "icon": "mdi:clock-outline",
+                "state_class": "total_increasing",
             },
         )
         self.set_state(
@@ -211,6 +216,7 @@ class HVACCostTracker(hass.Hass):
                 "friendly_name": "AC Session Off-Peak Runtime",
                 "unit_of_measurement": "h",
                 "icon": "mdi:clock-outline",
+                "state_class": "total_increasing",
             },
         )
         self.set_state(
@@ -220,5 +226,6 @@ class HVACCostTracker(hass.Hass):
                 "friendly_name": "AC Session Super Off-Peak Runtime",
                 "unit_of_measurement": "h",
                 "icon": "mdi:clock-outline",
+                "state_class": "total_increasing",
             },
         )
