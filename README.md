@@ -41,16 +41,20 @@ Most automation classes inherit from custom helpers or standard AppDaemon plugin
 *   **Local Workspace**: File modifications are written to this workspace (`/Users/thurs/dev/appd/apps`) and synced or deployed via NixOS modules.
 *   **Git Workflow**: Always verify python syntax compilation before committing and deploying. Do not push to remote directly from the workspace unless desired.
 
----
-
 ## Development & Verification
 
-To verify that python changes compile without syntax errors prior to committing:
+This workspace includes a **Nix flake** (`flake.nix`) and **direnv** config (`.envrc`) to automatically load a Python environment populated with `appdaemon` and `requests` dependencies.
 
+To activate the shell:
 ```bash
-# Verify specific scripts
-python3 -m py_compile climate/tracker.py
+# Using direnv (automatic upon entering the directory)
+direnv allow
 
-# Recursively verify the entire workspace
+# Or manually using Nix
+nix develop
+```
+
+Once inside the environment, you can recursively verify that all Python files compile without syntax errors:
+```bash
 python3 -m compileall .
 ```
