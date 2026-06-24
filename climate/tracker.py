@@ -76,9 +76,14 @@ class HVACCostTracker(hass.Hass):
                 self.previous_runtime = new_runtime
                 self.update_cost_sensors()
             elif new_runtime < self.previous_runtime:
-                # Handle sensor resets (e.g., at midnight or manual reset)
-                self.log(f"Sensor reset detected (new_runtime: {new_runtime} < previous: {self.previous_runtime}). Resetting previous_runtime tracker.")
-                self.previous_runtime = new_runtime
+                # Handle sensor resets (only allow near midnight)
+                now_time = self.time()
+                is_near_midnight = (now_time.hour == 0 and now_time.minute < 5) or (now_time.hour == 23 and now_time.minute > 55)
+                if is_near_midnight:
+                    self.log(f"Sensor reset detected near midnight (new_runtime: {new_runtime} < previous: {self.previous_runtime}). Resetting previous_runtime tracker.")
+                    self.previous_runtime = new_runtime
+                else:
+                    self.log(f"Ignored runtime decrease (possible glitch/reboot): {self.previous_runtime} -> {new_runtime}", level="WARNING")
 
         except ValueError:
             self.log(
