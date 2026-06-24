@@ -1,6 +1,7 @@
 away_mode:
   class: AwayMode
   module: away
+  wifi_sensor: sensor.pixel_7_pro_wi_fi_connection
 
 back_door_camera:
   class: CameraLockControl

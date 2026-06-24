@@ -1,3 +1,5 @@
 .stfolder
 __pycache__/*
 **/__pycache__/*
+.direnv
+
