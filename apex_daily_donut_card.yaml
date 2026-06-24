@@ -1,0 +1,20 @@
+type: custom:apexcharts-card
+chart_type: donut
+header:
+  show: true
+  title: Daily HVAC Cost Breakdown
+  show_states: true
+series:
+  - entity: sensor.hvac_cost_peak
+    name: Peak
+    color: '#FF1744' # Red
+  - entity: sensor.hvac_cost_off_peak
+    name: Off-Peak
+    color: '#FF9100' # Orange
+  - entity: sensor.hvac_cost_super_off_peak
+    name: Super Off-Peak
+    color: '#00E676' # Green
+apex_config:
+  legend:
+    show: true
+    position: right
