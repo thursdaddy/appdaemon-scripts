@@ -81,7 +81,8 @@ class LockDoors(hass.Hass):
                     self.lock_handler = self.run_in(self.lock_door, 30)
 
             elif "contact" in payload and payload["contact"] is False:
-                self.log("DOOR OPEN")
+                door_name = self._lock.replace("lock_", "").replace("_", " ").title()
+                self.log(f"{door_name} OPENED")
                 self.set_state(self._jammed_or_open, state="on")
 
                 if self.info_timer(self.jammed_or_open_handler) is not None:
@@ -89,6 +90,19 @@ class LockDoors(hass.Hass):
 
                 if self.info_timer(self.lock_handler) is not None:
                     self.cancel_timer(self.lock_handler)
+
+                # Send gotify notification that the door was opened
+                self.call_service(
+                    "notify/gotify",
+                    title=f"{door_name} Opened",
+                    message=f"The {door_name} was opened.",
+                    data={
+                        "extras": {
+                            "client::display": {"contentType": "text/plain"},
+                        },
+                        "priority": 5,
+                    }
+                )
 
         except json.JSONDecodeError:
             self.log("[ERR] Invalid JSON payload")

@@ -43,8 +43,9 @@ class CameraLockControl(hass.Hass):
         self.person_detected(entity, attribute, old, new, kwargs)
 
     def location_update(self, entity, attribute, old, new, kwargs):
+        door_name = self._lock.replace("lock_", "").replace("_", " ").title()
         if self._is_home_condition_met() and (old != "home" or not self._home_window_active):
-            self.log("Home Location Detected")
+            self.log(f"Home Location Detected. Activating 5-minute unlock window for {door_name}.")
             self._home_window_active = True
             self._home_window_timer = self.run_in(self.end_home_window, 300)
 
@@ -57,25 +58,40 @@ class CameraLockControl(hass.Hass):
                     recently_triggered = True
 
             if camera_state == "on" or recently_triggered:
-                self.log(f"Camera was active (state: {camera_state}, recent: {recently_triggered}). Unlocking immediately.")
+                self.log(f"Camera near {door_name} was active (state: {camera_state}, recent: {recently_triggered}). Unlocking immediately.")
                 self.unlock_door()
 
         elif not self._is_home_condition_met() and (old == "home" or self._home_window_active):
-            self.log("Detected Away, Locking Door.")
+            self.log(f"Detected Away from home. Locking {door_name}.")
             self._home_window_active = False
             self.lock_door()
             if self._home_window_timer:
                 self.cancel_timer(self._home_window_timer)
 
     def end_home_window(self, kwargs):
+        door_name = self._lock.replace("lock_", "").replace("_", " ").title()
         if self._home_window_timer:
             self.cancel_timer(self._home_window_timer)
             self._home_window_active = False
-        self.log("Home window ended")
+        self.log(f"Home unlock window expired for {door_name}.")
+        
+        # Notify the user that the window has expired
+        self.call_service(
+            "notify/gotify",
+            title=f"Smart Lock Window Expired",
+            message=f"The 5-minute unlock window for {door_name} has expired.",
+            data={
+                "extras": {
+                    "client::display": {"contentType": "text/plain"},
+                },
+                "priority": 4,
+            }
+        )
 
     def person_detected(self, entity, attribute, old, new, kwargs):
         if new == "on":
-            self.log("Person Detected")
+            door_name = self._lock.replace("lock_", "").replace("_", " ").title()
+            self.log(f"Person Detected near {door_name}.")
             self._last_camera_trigger = self.datetime()
             self.check_unlock_conditions()
 
@@ -87,15 +103,17 @@ class CameraLockControl(hass.Hass):
         return location_home
 
     def check_unlock_conditions(self):
-        self.log("Checking unlock conditions...")
+        door_name = self._lock.replace("lock_", "").replace("_", " ").title()
+        self.log(f"Checking unlock conditions for {door_name}...")
         if self._is_home_condition_met() and self._home_window_active:
-            self.log("Unlocking via Cameras")
+            self.log(f"Unlocking {door_name} via Cameras.")
             self.unlock_door()
         else:
-            self.log("Not unlocking, conditions not met.")
+            self.log(f"Not unlocking {door_name}. Conditions not met (home: {self._is_home_condition_met()}, window_active: {self._home_window_active}).")
 
     def unlock_door(self):
-        self.log("Unlocking door...")
+        door_name = self._lock.replace("lock_", "").replace("_", " ").title()
+        self.log(f"Unlocking {door_name}...")
         if self._home_window_timer:
             self.cancel_timer(self._home_window_timer)
         self.mqtt_api.mqtt_publish(
@@ -104,9 +122,10 @@ class CameraLockControl(hass.Hass):
         )
 
     def lock_door(self):
+        door_name = self._lock.replace("lock_", "").replace("_", " ").title()
         lock_state = self.hass_api.get_state(self._lock)
         if lock_state == "unlocked":
-            self.log("Locking door...")
+            self.log(f"Locking {door_name}...")
             self.mqtt_api.mqtt_publish(
                 topic=f"{self._lock_topic}/set",
                 payload="LOCK",
