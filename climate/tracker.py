@@ -22,45 +22,34 @@ class HVACCostTracker(hass.Hass):
         self.super_off_peak_hours = super_off_peak_arg.get("hours", ["08:00:00-15:00:00"])
         self.super_off_peak_weekdays_only = super_off_peak_arg.get("weekdays_only", False)
 
-        # Restore daily costs and sub-tier costs from Home Assistant state
-        self.runtime_cost = self.restore_cost_sensor("sensor.hvac_cost_tracker")
-        self.peak_cost = self.restore_cost_sensor("sensor.hvac_cost_peak")
-        self.off_peak_cost = self.restore_cost_sensor("sensor.hvac_cost_off_peak")
-        self.super_off_peak_cost = self.restore_cost_sensor("sensor.hvac_cost_super_off_peak")
+        # Initialize session cost and runtime counters to 0. 
+        # These will continuously increase, and Home Assistant utility_meters will handle daily/monthly tracking.
+        self.runtime_cost = 0.0
+        self.peak_cost = 0.0
+        self.off_peak_cost = 0.0
+        self.super_off_peak_cost = 0.0
 
-        # Restore daily runtimes from Home Assistant state
-        self.peak_runtime = self.restore_cost_sensor("sensor.hvac_cooling_peak")
-        self.off_peak_runtime = self.restore_cost_sensor("sensor.hvac_cooling_off_peak")
-        self.super_off_peak_runtime = self.restore_cost_sensor("sensor.hvac_cooling_super_off_peak")
+        self.peak_runtime = 0.0
+        self.off_peak_runtime = 0.0
+        self.super_off_peak_runtime = 0.0
 
-        # Restore previous runtime to compare against
+        # Initialize previous runtime to compare against
         self.previous_runtime = None
         current_runtime_state = self.get_state("sensor.hvac_cooling")
         try:
             if current_runtime_state not in [None, "unavailable", "unknown"]:
                 self.previous_runtime = float(current_runtime_state)
-                self.log(f"Restored previous runtime tracker state: {self.previous_runtime} hours.")
+                self.log(f"Initialized previous runtime tracker state: {self.previous_runtime} hours.")
         except ValueError:
-            self.log(f"Could not restore previous runtime from sensor.hvac_cooling (state: {current_runtime_state}).")
+            self.log(f"Could not initialize previous runtime from sensor.hvac_cooling (state: {current_runtime_state}).")
 
         self.listen_state(self.cooling_runtime_change, "sensor.hvac_cooling")
         
-        # Reset daily cost exactly at midnight
-        self.run_daily(self.reset_runtime_cost, "00:00:00")
+        # Listen for Home Assistant reconnects/restarts to re-publish states
+        self.listen_event(self.ha_restarted, "ha_started")
         
         # Ensure sensors are updated on startup
         self.update_cost_sensors()
-
-    def restore_cost_sensor(self, entity_id):
-        current_state = self.get_state(entity_id)
-        try:
-            if current_state not in [None, "unavailable", "unknown"]:
-                val = float(current_state)
-                self.log(f"Restored daily cost from {entity_id}: ${val:.3f}")
-                return val
-        except ValueError:
-            self.log(f"Could not restore daily cost from {entity_id} (state: {current_state}). Starting at $0.00.")
-        return 0.0
 
     def cooling_runtime_change(self, entity, attribute, old, new, kwargs):
         try:
@@ -165,80 +154,71 @@ class HVACCostTracker(hass.Hass):
                 return True
         return False
 
+    def ha_restarted(self, event_name, data, kwargs):
+        self.log("Home Assistant restart/reconnect detected. Re-publishing HVAC cost tracker sensors.")
+        self.update_cost_sensors()
+
     def update_cost_sensors(self):
         self.set_state(
-            "sensor.hvac_cost_tracker",
+            "sensor.hvac_cost_session",
             state=f"{self.runtime_cost:.3f}",
             attributes={
-                "friendly_name": "AC Daily Running Cost",
+                "friendly_name": "AC Session Running Cost",
                 "unit_of_measurement": "$",
                 "icon": "mdi:currency-usd",
             },
         )
         self.set_state(
-            "sensor.hvac_cost_peak",
+            "sensor.hvac_cost_peak_session",
             state=f"{self.peak_cost:.3f}",
             attributes={
-                "friendly_name": "AC Daily Peak Cost",
+                "friendly_name": "AC Session Peak Cost",
                 "unit_of_measurement": "$",
                 "icon": "mdi:currency-usd",
             },
         )
         self.set_state(
-            "sensor.hvac_cost_off_peak",
+            "sensor.hvac_cost_off_peak_session",
             state=f"{self.off_peak_cost:.3f}",
             attributes={
-                "friendly_name": "AC Daily Off-Peak Cost",
+                "friendly_name": "AC Session Off-Peak Cost",
                 "unit_of_measurement": "$",
                 "icon": "mdi:currency-usd",
             },
         )
         self.set_state(
-            "sensor.hvac_cost_super_off_peak",
+            "sensor.hvac_cost_super_off_peak_session",
             state=f"{self.super_off_peak_cost:.3f}",
             attributes={
-                "friendly_name": "AC Daily Super Off-Peak Cost",
+                "friendly_name": "AC Session Super Off-Peak Cost",
                 "unit_of_measurement": "$",
                 "icon": "mdi:currency-usd",
             },
         )
         self.set_state(
-            "sensor.hvac_cooling_peak",
+            "sensor.hvac_cooling_peak_session",
             state=f"{self.peak_runtime:.3f}",
             attributes={
-                "friendly_name": "AC Daily Peak Runtime",
+                "friendly_name": "AC Session Peak Runtime",
                 "unit_of_measurement": "h",
                 "icon": "mdi:clock-outline",
             },
         )
         self.set_state(
-            "sensor.hvac_cooling_off_peak",
+            "sensor.hvac_cooling_off_peak_session",
             state=f"{self.off_peak_runtime:.3f}",
             attributes={
-                "friendly_name": "AC Daily Off-Peak Runtime",
+                "friendly_name": "AC Session Off-Peak Runtime",
                 "unit_of_measurement": "h",
                 "icon": "mdi:clock-outline",
             },
         )
         self.set_state(
-            "sensor.hvac_cooling_super_off_peak",
+            "sensor.hvac_cooling_super_off_peak_session",
             state=f"{self.super_off_peak_runtime:.3f}",
             attributes={
-                "friendly_name": "AC Daily Super Off-Peak Runtime",
+                "friendly_name": "AC Session Super Off-Peak Runtime",
                 "unit_of_measurement": "h",
                 "icon": "mdi:clock-outline",
             },
         )
-
-    def reset_runtime_cost(self, kwargs):
-        """Resets the daily cost at a specific time after midnight."""
-        self.runtime_cost = 0.0
-        self.peak_cost = 0.0
-        self.off_peak_cost = 0.0
-        self.super_off_peak_cost = 0.0
-        self.peak_runtime = 0.0
-        self.off_peak_runtime = 0.0
-        self.super_off_peak_runtime = 0.0
-        self.previous_runtime = 0.0
-        self.log("Daily AC cost reset to $0.00.")
-        self.update_cost_sensors()
