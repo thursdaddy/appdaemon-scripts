@@ -21,15 +21,25 @@ front_door_camera:
 home_detection:
   class: LocationChange
   module: lights
+  wifi_sensor: sensor.pixel_7_pro_wi_fi_connection
+  delay: 120
+  brightness: 50
   lights:
     - light.living_room_main_lights
     - light.hallway_main_lights
   schedule:
+    day:
+      start: sunrise
+      end: sunset
+      brightness: 50
+      delay: 120
     evening:
       start: sunset
       end: "21:00:00"
       brightness: 50
+      delay: 120
     night:
       start: "21:00:01"
       end: sunrise
-      brightness: 30
+      brightness: 50
+      delay: 120

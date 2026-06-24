@@ -7,6 +7,7 @@ class LocationChange(hass.Hass):
     def initialize(self):
         # Configuration
         self._location_entity = "device_tracker.pixel_7_pro"
+        self._wifi_entity = self.args.get("wifi_sensor", None)
         self._doors = ["zigbee2mqtt/magnet_back_door", "zigbee2mqtt/magnet_front_door"]
         self._schedule = self.args.get("schedule", {})
 
@@ -26,10 +27,14 @@ class LocationChange(hass.Hass):
         self.log(f"  Schedule:      {list(self._schedule.keys())}")
         self.log(f"  Doors:         {self._doors}")
         self.log(f"  Tracker:       {self._location_entity}")
+        if self._wifi_entity:
+            self.log(f"  WiFi Sensor:   {self._wifi_entity}")
         self.log(f"  Debug Mode:    {'ENABLED' if self._debug_mode else 'DISABLED'}")
         self.log("===        CONFIG        ===")
 
         self.listen_state(self.location_update, self._location_entity)
+        if self._wifi_entity:
+            self.listen_state(self.location_update, self._wifi_entity)
         self.mqtt_api = self.get_plugin_api("MQTT")
 
         # Listen for door sensors permanently
@@ -41,23 +46,24 @@ class LocationChange(hass.Hass):
             self.log(f"[DEBUG] {message}")
 
     def location_update(self, entity, attribute, old, new, kwargs):
-        if new == "home" and old != "home":
-            self.log("Arrival Detected: Opening 5-minute welcome window.")
-            self._active_config = self.get_current_schedule_config()
+        if new in ["home", "connected"] and old not in ["home", "connected"]:
+            if not self._home_window_active:
+                self.log(f"Arrival Detected via {entity} ({old} -> {new}). Opening 5-minute welcome window.")
+                self._active_config = self.get_current_schedule_config()
 
-            if self._active_config:
-                self._home_window_active = True
-                self.run_in(self.end_home_window, 300)
-                
-                self.call_service(
-                    "notify/gotify",
-                    title="HOME",
-                    message="Arrival window active. Waiting for door...",
-                )
-            else:
-                self.debug_log(
-                    "Arrived home, but no active schedule found. Skipping welcome window."
-                )
+                if self._active_config:
+                    self._home_window_active = True
+                    self.run_in(self.end_home_window, 300)
+                    
+                    self.call_service(
+                        "notify/gotify",
+                        title="HOME",
+                        message="Arrival window active. Waiting for door...",
+                    )
+                else:
+                    self.debug_log(
+                        "Arrived home, but no active schedule found. Skipping welcome window."
+                    )
 
     def magnet_callback(self, event_name, data, kwargs):
         if not self._home_window_active:

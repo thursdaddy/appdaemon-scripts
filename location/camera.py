@@ -1,3 +1,4 @@
+import json
 import hassapi as hass
 
 
@@ -16,6 +17,7 @@ class CameraLockControl(hass.Hass):
         self._location_entity = "device_tracker.pixel_7_pro"
         self._wifi_entity = self.args.get("wifi_sensor")
         self._camera = self.args.get("camera")
+        self._magnet = self.args.get("magnet", None)
 
         # home detection flags
         self._home_window_timer = None
@@ -27,6 +29,12 @@ class CameraLockControl(hass.Hass):
         if self._wifi_entity:
             self.listen_state(self.home_callback, self._wifi_entity)
         self.listen_state(self.camera_callback, self._camera)
+
+        if self._magnet:
+            self._magnet_topic = f"zigbee2mqtt/{self._magnet}"
+            self.mqtt_api.listen_event(
+                self.magnet_callback, "MQTT_MESSAGE", topic=self._magnet_topic
+            )
 
     def home_callback(self, entity, attribute, old, new, kwargs):
         if self.get_state("input_boolean.automated_locks") == "off":
@@ -116,6 +124,8 @@ class CameraLockControl(hass.Hass):
         self.log(f"Unlocking {door_name}...")
         if self._home_window_timer:
             self.cancel_timer(self._home_window_timer)
+            self._home_window_timer = None
+        self._home_window_active = False
         self.mqtt_api.mqtt_publish(
             topic=f"{self._lock_topic}/set",
             payload="UNLOCK",
@@ -130,3 +140,20 @@ class CameraLockControl(hass.Hass):
                 topic=f"{self._lock_topic}/set",
                 payload="LOCK",
             )
+
+    def magnet_callback(self, event_name, data, kwargs):
+        try:
+            payload = json.loads(data["payload"])
+            if "contact" in payload and payload["contact"] is False:
+                # Door was opened
+                door_name = self._lock.replace("lock_", "").replace("_", " ").title()
+                if self._home_window_active:
+                    self.log(f"{door_name} was opened. Resetting/canceling the home unlock window.")
+                    if self._home_window_timer:
+                        self.cancel_timer(self._home_window_timer)
+                        self._home_window_timer = None
+                    self._home_window_active = False
+        except json.JSONDecodeError:
+            self.log("[ERR] Invalid JSON payload on magnet")
+        except KeyError:
+            self.log("[ERR] Missing contact key in payload on magnet")
